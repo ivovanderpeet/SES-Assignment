@@ -1,25 +1,28 @@
-%% Constants
-
-T_H_in = 240 + 273; % K
-T_C_out = 110 + 273; % K
-mdot_C = 150; % kg/s
-cp_H = 4771.9; % J/K %EngineeringToolbox
-cp_C = 4200; % J/K
-Qdot = 50*10^6; % J/s
-
+clear all; close all;
 %% A.2.1 Design of a heat-only plant
 
-% 1. Calculate the return temperature of the district-heating stream via eq.(2.6).
+%% Constants
+T_H_in = 240 + 273;     % [K] Given
+T_C_out = 110 + 273;    % [K] Given
+mdot_C = 150;           % [kg/s] Given
+Qdot = 50*10^6;         % [J/s] Given
 
-T_C_in = T_Cout - Qdot/(mdot_C*cp_C);
+cp_H = 4771.9;          % [J/K] EngineeringToolbox
+cp_C = 4200;            % [J/K]
 
-% 3. Choose a value for the capacity flow ratio CR, see § 2.5 (rationale?)
+%% Questions
+T_C_in = T_C_out - Qdot/(mdot_C*cp_C); % [K] Calculate cold-side inlet temperature
 
-CR = 1;
+CR = 0.7; % [-] Choose a value for heat capacity ratio CR NIET HOGER DAN 1
 
-% 4. Calculate the exit temperature of the well water and well mass flow using the relations in Sec. 2.5.
-%    Judge whether the well mass flow is “reasonable” by comparison with the district-heating mass flow and adjust your choice for CR if deemed “unreasonable”.1
+mdot_H = (mdot_C*cp_C)/(cp_H*CR); % [kg/s] Calculate hot-side mass flow rate
 
-mdot_W = (mdot_C*cp_C)/(cp_H*CR)
+T_H_out = T_H_in-CR*(T_C_out-T_C_in);
+
+% For counterflow:
+dT1 = T_H_out - T_C_in;
+dT2 = T_H_in - T_C_out;
+dT_lm = (dT2 - dT1)/log(dT2/dT1);
+
 
 %%
