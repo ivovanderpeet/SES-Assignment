@@ -19,6 +19,14 @@ mdot_H = (mdot_C*cp_C)/(cp_H*CR); % [kg/s] Calculate hot-side mass flow rate
 
 T_H_out = T_H_in-CR*(T_C_out-T_C_in);
 
+figure()
+title('Counterflow configuration')
+plot([0,1],[T_C_out, T_C_in], [0,1],[T_H_in,T_H_out]);
+grid on;
+legend('Cold', 'Hot');
+xlabel('Length [-]')
+ylabel('Temperature [K]')
+
 % For counterflow:
 dT1 = T_H_out - T_C_in;
 dT2 = T_H_in - T_C_out;
