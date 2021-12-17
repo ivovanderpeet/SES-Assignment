@@ -1,8 +1,8 @@
 clear all; close all;
-%% A.2.1 Design of a heat-only plant
+%% Vary hot-side outlet temperature
 
 %% Constants
-n = 5000;
+n = 50;
 vec = ones(1,n);
 
 T_H_in = vec*(240 + 273);     % [K] Given

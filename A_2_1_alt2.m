@@ -1,46 +1,84 @@
 clear all; close all;
-%% A.2.1 Design of a heat-only plant
+%% Vary CR
 
 %% Constants
-T_H_in = 240 + 273;     % [K] Given
-T_C_out = 110 + 273;    % [K] Given
-mdot_C = 150;           % [kg/s] Given
-Qdot = 50*10^6;         % [J/s] Given
+n = 500;
+vec = ones(1,n);
+vec2 = ones(1,2*n);
 
-cp_H = 4771.9;          % [J/K] EngineeringToolbox
-cp_C = 4200;            % [J/K]
+% Temperatures
+THin = vec2*(240 + 273);     % [K] Given
+TCout = vec2*(110 + 273);    % [K] Given
+
+% Heat and mass flux
+Qdot = 50*10^6;         % [J/s] Given
+mdotC = 150;           % [kg/s] Given
+cpH = 4500;            % [J/K]
+cpC = 4200;            % [J/K]
+
+Cc = vec2*mdotC*cpC;
 
 %% Questions
-T_C_in = T_C_out - Qdot/(mdot_C*cp_C); % [K] Calculate cold-side inlet temperature
+TCin = TCout - Qdot/(mdotC*cpC); % [K] Calculate cold-side inlet temperature
 
-CR = 0.05:0.05:0.95; % [-] Choose a value for heat capacity ratio CR NIET HOGER DAN 1
+CR = linspace(0,1,n); % [-] Choose a value for heat capacity ratio CR NIET HOGER DAN 1
+CR = [CR,flip(CR)];
+hi = zeros(1,2*n); % When is Ch higher than Cc
+hi(n+1:end) = 1;
 
-mdot_H = (mdot_C*cp_C)./(cp_H*CR); % [kg/s] Calculate hot-side mass flow rate
+Ch = zeros(1,2*n);
+Ch(hi==1) = Cc(hi==1)./CR(hi==1); % When Ch > Cc
+Ch(hi==0) = Cc(hi==0).*CR(hi==0); % When Ch < Cc
 
-T_H_out = ones(1,19)*T_H_in-CR*(T_C_out-T_C_in);
+Cmin = min(Cc,Ch);
+Cmax = max(Cc,Ch);
+
+mdotH = Ch/cpH;
+THout = THin - Cc./Ch.*(TCout-TCin);
+THout(THout < TCin) = nan;
 
 % For counterflow:
-dT1 = T_H_out - T_C_in;
-dT2 = T_H_in - T_C_out;
+dT1 = THout - TCin;
+dT2 = THin - TCout;
 dT_lm = (dT2 - dT1)./log(dT2./dT1);
-
+    
 %%
 UA = Qdot./dT_lm;
-NTU = (T_C_out-T_C_in)./dT_lm;
+NTU = UA./Cmin;
 eps = (1-exp(-NTU.*(1-CR)))./(1-CR.*exp(-NTU.*(1-CR)));
 
 %% Plot
 figure()
-plot(CR, eps)
+plot(CR(hi==0), eps(hi==0)); hold on
+plot(CR(hi==1), eps(hi==1))
 title('eps')
+legend('Ch < Cc', 'Ch > Cc')
 grid on
 
 figure()
-plot(CR, NTU)
+plot(CR(hi==0), NTU(hi==0)); hold on
+plot(CR(hi==1), NTU(hi==1))
 title('NTU')
+legend('Ch < Cc', 'Ch > Cc')
 grid on
 
 figure()
-plot(CR, mdot_H)
-title('mdot_H')
+plot(CR(hi==0), UA(hi==0)); hold on
+plot(CR(hi==1), UA(hi==1))
+title('UA')
+legend('Ch < Cc', 'Ch > Cc')
+grid on
+
+figure()
+plot(CR(hi==0), mdotH(hi==0)); hold on
+plot(CR(hi==1), mdotH(hi==1))
+title('mdotH')
+legend('Ch < Cc', 'Ch > Cc')
+grid on
+
+figure()
+plot(CR(hi==0), Ch(hi==0)); hold on
+plot(CR(hi==1), Ch(hi==1))
+title('Ch')
+legend('Ch < Cc', 'Ch > Cc')
 grid on
