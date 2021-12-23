@@ -11,10 +11,10 @@ THin = vec2*(240 + 273);     % [K] Given
 TCout = vec2*(110 + 273);    % [K] Given
 
 % Heat and mass flux
-Qdot = 50*10^6;         % [J/s] Given
+Qdot = 50*10^6;        % [J/s] Given
 mdotC = 150;           % [kg/s] Given
-cpH = 4500;            % [J/K]
-cpC = 4200;            % [J/K]
+cpH = 4771.9;          % [J/K] Not actually constant
+cpC = 4200;            % [J/K] Constant
 
 Cc = vec2*mdotC*cpC;
 
@@ -48,37 +48,43 @@ NTU = UA./Cmin;
 eps = (1-exp(-NTU.*(1-CR)))./(1-CR.*exp(-NTU.*(1-CR)));
 
 %% Plot
-figure()
+figure(1)
 plot(CR(hi==0), eps(hi==0)); hold on
 plot(CR(hi==1), eps(hi==1))
 title('eps')
 legend('Ch < Cc', 'Ch > Cc')
 grid on
+xlabel('CR')
 
-figure()
+figure(2)
 plot(CR(hi==0), NTU(hi==0)); hold on
 plot(CR(hi==1), NTU(hi==1))
 title('NTU')
 legend('Ch < Cc', 'Ch > Cc')
 grid on
+xlabel('CR')
 
-figure()
+
+figure(3)
 plot(CR(hi==0), UA(hi==0)); hold on
 plot(CR(hi==1), UA(hi==1))
 title('UA')
 legend('Ch < Cc', 'Ch > Cc')
 grid on
+xlabel('CR')
 
-figure()
+figure(4)
 plot(CR(hi==0), mdotH(hi==0)); hold on
 plot(CR(hi==1), mdotH(hi==1))
 title('mdotH')
 legend('Ch < Cc', 'Ch > Cc')
 grid on
+xlabel('CR')
 
-figure()
+figure(5)
 plot(CR(hi==0), Ch(hi==0)); hold on
 plot(CR(hi==1), Ch(hi==1))
 title('Ch')
 legend('Ch < Cc', 'Ch > Cc')
 grid on
+xlabel('CR')

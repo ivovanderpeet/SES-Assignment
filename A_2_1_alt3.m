@@ -13,7 +13,7 @@ TCout = (110 + 273);    % [K] Given
 % Heat and mass flux
 Qdot = 50*10^6;         % [J/s] Given
 mdotC = 150;           % [kg/s] Given
-cpH = 4500;            % [J/K]
+cpH = 4771.9;          % [J/K] Not actually constant
 cpC = 4200;            % [J/K]
 
 Cc = mdotC*cpC;
@@ -21,7 +21,7 @@ Cc = mdotC*cpC;
 %% Temperature
 TCin = TCout - Qdot/(mdotC*cpC); % [K] Calculate cold-side inlet temperature
 
-mdotH = 60;
+mdotH = 56;
 Ch = mdotH*cpH;
 Cmin = min(Cc,Ch);
 Cmax = max(Cc,Ch);
