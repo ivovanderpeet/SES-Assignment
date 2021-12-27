@@ -11,10 +11,10 @@ THin = vec2*(240 + 273);     % [K] Given
 TCout = vec2*(110 + 273);    % [K] Given
 
 % Heat and mass flux
-Qdot = 50*10^6;        % [J/s] Given
-mdotC = 150;           % [kg/s] Given
-cpH = 4771.9;          % [J/K] Not actually constant
-cpC = 4200;            % [J/K] Constant
+Qdot = 50*10^6;      % [J/s] Given
+mdotC = 150;         % [kg/s] Given
+cpH = 4450;          % [J/K] Not actually constant
+cpC = 4250;          % [J/K] Constant
 
 Cc = vec2*mdotC*cpC;
 

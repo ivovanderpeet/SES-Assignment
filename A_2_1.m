@@ -1,36 +1,50 @@
-clear all; close all;
+clear all; close all; clc;
 %% A.2.1 Design of a heat-only plant
 
 %% Constants
-T_H_in = 240 + 273;     % [K] Given
-T_C_out = 110 + 273;    % [K] Given
-mdot_C = 150;           % [kg/s] Given
-Qdot = 50*10^6;         % [J/s] Given
+THin = 240;         % [K] Given
+TCout = 110;        % [K] Given
+mdotC = 150;        % [kg/s] Given
+mdotH = 62.39;    % [kg/s] From symbolic
 
-cp_H = 4771.9;          % [J/K] EngineeringToolbox
-cp_C = 4200;            % [J/K]
+Qdot = 50*10^6;     % [J/s] Given
 
-%% Questions
-T_C_in = T_C_out - Qdot/(mdot_C*cp_C); % [K] Calculate cold-side inlet temperature
+CpH = 4.30233e+03;   % [J/K] From symbolic
+CpC = 4.18838e+03;   % [J/K] From symbolic
 
-CR = 0.7; % [-] Choose a value for heat capacity ratio CR NIET HOGER DAN 1
+CH = mdotH*CpH;
+CC = mdotC*CpC;
+Cmin = min(CC,CH);
+Cmax = max(CC,CH);
+CR = Cmin/Cmax;
 
-mdot_H = (mdot_C*cp_C)/(cp_H*CR); % [kg/s] Calculate hot-side mass flow rate
+%% Calculations
+TCin = TCout - Qdot/(mdotC*CpC); % [K] Calculate cold-side inlet temperature
+THout = THin - CC/CH*(TCout-TCin);
 
-T_H_out = T_H_in-CR*(T_C_out-T_C_in);
+% For counterflow:
+dT1 = THout - TCin;
+dT2 = THin - TCout;
+dTlm = (dT2 - dT1)/log(dT2/dT1);
+
+% Final parameters
+UA = Qdot/dTlm;
+NTU = UA/Cmin;
+
+% Check CpH back
+TmH = (THout + THin)/2;
+XSteam("CpL_T", TmH)*1000;
+
+%% Figure
+fprintf('Heat capacities:\tCpH = %0.4e,\tCpC = %0.4e\n', CpH, CpC)
+fprintf('Mass flows:\t\t\tmdotH = %3.2f,\t\tmdotC = %3.2f\n', mdotH, mdotC)
+fprintf('Nondimensional:\t\tNTU = %0.3f,\t\teps = %0.5f\n', NTU, eps)
+fprintf('Heat transfer:\t\tUA = %0.3e\n',UA)
 
 figure()
 title('Counterflow configuration')
-plot([0,1],[T_C_out, T_C_in], [0,1],[T_H_in,T_H_out]);
+plot([0,1],[TCout, TCin], [0,1],[THin,THout]);
 grid on;
 legend('Cold', 'Hot');
 xlabel('Length [-]')
 ylabel('Temperature [K]')
-
-% For counterflow:
-dT1 = T_H_out - T_C_in;
-dT2 = T_H_in - T_C_out;
-dT_lm = (dT2 - dT1)/log(dT2/dT1);
-
-
-%%
