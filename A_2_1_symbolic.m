@@ -9,7 +9,6 @@ mdotC = 150;    % [kg/s] Given
 
 % Initial Guess
 CpC = 4200;     % [J/kg/K] Assumed constant
-% CpCsave = [CpC];
 
 % Iteratively determine CpC
 ERR = 1;
@@ -21,7 +20,6 @@ while ERR > 1e-10
     ERR = abs(CpC_ - CpC)/CpC;
 
     CpC = CpC_;
-%     CpCsave = [CpCsave, CpC];
 end
 
 % Final value for TCin and TmC
