@@ -1,27 +1,86 @@
-%% Constants
+clear all; close all; clc
+% 1. Saturated liquid   (Condensor out, pump in)
+% 2. Compressed liquid  (Pump out, economizer in)
+% 3. Saturated liquid   (Economizer out, evaporator in)
+% 4. Saturated vapour   (Evaporator out, turbine in)
+% 5. Liquid & vapour    (Turbine out, condensor in)
 
-T_SGin = 240 + 273; % K
-T_Cout = 110 + 273; % K
-mdot_DH = 150; % kg/s
-mdot = 0; % kg/s
-cp_W = 4771.9; % J/K %EngineeringToolbox
-cp_DH = 4200; % J/K
-cp = 4200; % J/K
-Qdot = 50*10^6; % J/s
+%% Initializing
+p = zeros(1,5); % [bar]
+T = zeros(1,5); % [C]
+h = zeros(1,5); % [kJ/kg]
+s = zeros(1,5); % [kJ/kg/K]
+q = zeros(1,5); % [kJ/kg]
+w = zeros(1,5); % [kJ/kg]
+rho = zeros(1,5);
 
-%% A.2.1 Design of a heat-only plant
+% Constants
+Qdot = 50e3; % [kW]
 
-% 1. Calculate the return temperature of the district-heating stream via eq.(2.6).
+%% Follow the cycle
+% 1. Saturated liquid   (Condensor out, pump in)
+p(1) = 1.5;
+T(1) = XSteam('Tsat_p', p(1));
+h(1) = XSteam('hL_p', p(1));
+s(1) = XSteam('sL_p', p(1));
+rho(1) = XSteam('rhoL_p', p(1));
 
-T_Cin = T_Cout - Qdot/(mdot_DH*cp_DH);
+% 3. Saturated liquid   (Economizer out, evaporator in)
+T(3) = 200;
+p(3) = XSteam('psat_T', T(3));
+h(3) = XSteam('hL_T', T(3));
+s(3) = XSteam('sL_T', T(3));
+rho(3) = XSteam('rhoL_p', p(3));
 
-% 3. Choose a value for the capacity flow ratio CR, see § 2.5 (rationale?)
+% 4. Saturated vapour   (Evaporator out, turbine in)
+T(4) = T(3);
+p(4) = XSteam('psat_T', T(4));
+h(4) = XSteam('hV_T', T(4));
+s(4) = XSteam('sV_T', T(4));
+rho(4) = XSteam('rhoV_p', p(4));
 
-CR = 1;
+% 5. Liquid & vapour    (Turbine out, condensor in)
+p(5) = p(1);
+T(5) = T(1);
+s(5) = s(4);
+h(5) = XSteam('h_ps', p(5), s(5));
+rho(5) = XSteam('rho_ps', p(5), s(5));
 
-% 4. Calculate the exit temperature of the well water and well mass flow using the relations in Sec. 2.5.
-%    Judge whether the well mass flow is “reasonable” by comparison with the district-heating mass flow and adjust your choice for CR if deemed “unreasonable”.1
+% 2. Compressed liquid  (Pump out, economizer in)
+p(2) = p(3);
+s(2) = s(1);
+T(2) = XSteam('T_ps', p(2), s(2));
+h(2) = XSteam('h_ps', p(2), s(2));
+rho(2) = XSteam('rho_ps', p(2), s(2));
 
-(mdot_DH*cp_DH)/(mdot_W*cp_W)
+% Heat and work
+q(1) = h(1)-h(5);
+w(2) = h(2)-h(1);
+q(3) = h(3)-h(2);
+q(4) = h(4)-h(3);
+w(5) = h(5)-h(4);
 
-%%
+%% Checks after calculating cycle
+mdot = -Qdot/q(1);
+x5 = XSteam('x_ps', p(5), s(5));
+
+%% Figure
+sat = getSatCurve();
+
+figure(1)
+plot([s,s(1)],[T,T(1)]); hold on
+plot(sat.s,sat.T)
+title('T-s diagram')
+xlabel('Entropy s [kJ/kg/K]')
+ylabel('Temperature [C]')
+text(s,T,{'1','2','3','4','5'})
+grid on
+
+figure(2)
+plot([h,h(1)],[T,T(1)]); hold on
+plot(sat.h,sat.T)
+title('Pinch diagram')
+xlabel('Enthalpy h [J/kg]')
+ylabel('Temperature [C]')
+text(h,T,{'1','2','3','4','5'})
+grid on
