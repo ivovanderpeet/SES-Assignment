@@ -59,15 +59,28 @@ mdotH = CH/CpH;
 % Calculate effectiveness
 eps = (1-exp(-NTU.*(1-CR)))./(1-CR.*exp(-NTU.*(1-CR)));
 
+% Saturation pressure at given temperature
+pH = XSteam('psat_T', TmH);
+pC = XSteam('psat_T', TmC);
+
 % Determine mean density
 rhoH = XSteam('rhoL_T', TmH);
 rhoC = XSteam('rhoL_T', TmC);
 
+% Determine average dynamic viscosity (assumed saturated liquid p & T)
+muH = XSteam('my_pT', pH, TmH*1.001); % T multiplied by 1.001 to ensure liquid domain
+muC = XSteam('my_pT', pC, TmC*1.001);
+
+% Determine thermal conductivity
+kH = XSteam('tcL_T', TmH);
+kC = XSteam('tcL_T', TmC);
+
 %% Figures & display
-fprintf('Heat capacity:\tCpH = %0.2f,\tCpC = %0.2f\t[J/kg/K]\n', CpH, CpC)
-fprintf('Mass flows:\t\tmdotH = %3.2f,\tmdotC = %3.2f\t[kg/s]\n', mdotH, mdotC)
-fprintf('Nondimensional:\tNTU = %0.2f,\t\teps = %0.4f\n', NTU, eps)
-fprintf('Densities:\t\trhoH = %0.2f,\tfrhoC = %0.2f\t[kg/m3]\n',rhoH, rhoC)
+fprintf('Heat capacity:\tCpH = %0.2f,\t\tCpC = %0.2f\t[J/kg/K]\n', CpH, CpC)
+fprintf('Mass flows:\t\tmdotH = %3.2f,\t\tmdotC = %3.2f\t[kg/s]\n', mdotH, mdotC)
+fprintf('Density:\t\trhoH = %0.2f,\t\tfrhoC = %0.2f\t[kg/m3]\n',rhoH, rhoC)
+fprintf('Dyn. visc.:\t\tmuH = %0.3e,\tmuC = %0.3e\t[Pa s]\n',muH, muC)
+fprintf('Nondimensional:\tNTU = %0.2f,\t\t\teps = %0.4f\n', NTU, eps)
 fprintf('Heat transfer:\tUA = %0.3e\t[W/m2/K]\n',UA)
 
 figure(1)

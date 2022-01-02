@@ -1,50 +1,128 @@
 clear all; close all; clc;
-%% A.2.1 Design of a heat-only plant
-
 %% Constants
-THin = 240;         % [K] Given
-TCout = 110;        % [K] Given
-mdotC = 150;        % [kg/s] Given
-mdotH = 62.39;    % [kg/s] From symbolic
+H.Tin = 240;     % [C] Given
+C.Tout = 110;    % [C] Given
+Qdot = 5e7;     % [W] Given
+C.mdot = 150;    % [kg/s] Given
 
-Qdot = 50*10^6;     % [J/s] Given
+%% Loop for determining C.Cp
 
-CpH = 4.30233e+03;   % [J/K] From symbolic
-CpC = 4.18838e+03;   % [J/K] From symbolic
+% Initial Guess
+C.Cp = 4200;     % [J/kg/K] Assumed constant
 
-CH = mdotH*CpH;
-CC = mdotC*CpC;
-Cmin = min(CC,CH);
-Cmax = max(CC,CH);
-CR = Cmin/Cmax;
+% Iteratively determine C.Cp
+ERR = 1;
+while ERR > 1e-10
+    C.C = C.mdot*C.Cp;
+    C.Tin = C.Tout - Qdot/(C.mdot*C.Cp); % [K] Calculate cold-side inlet temperature
+    C.Tm = (C.Tin + C.Tout)/2;
+    C.Cp_ = XSteam('CpL_T', C.Tm)*1000;
+    ERR = abs(C.Cp_ - C.Cp)/C.Cp;
 
-%% Calculations
-TCin = TCout - Qdot/(mdotC*CpC); % [K] Calculate cold-side inlet temperature
-THout = THin - CC/CH*(TCout-TCin);
+    C.Cp = C.Cp_;
+end
+clear('ERR');
 
-% For counterflow:
-dT1 = THout - TCin;
-dT2 = THin - TCout;
-dTlm = (dT2 - dT1)/log(dT2/dT1);
+% Final value for C.Tin and C.Tm
+C.Tin = C.Tout - Qdot/(C.mdot*C.Cp); % [K] Calculate cold-side inlet temperature
+C.Tm = (C.Tin + C.Tout)/2;
 
-% Final parameters
-UA = Qdot/dTlm;
-NTU = UA/Cmin;
+%% Symbolic hot-side stuff
+syms CH
+H.C = CH;
 
-% Check CpH back
-TmH = (THout + THin)/2;
-XSteam("CpL_T", TmH)*1000;
+CR = H.C/C.C; % [-] Known that H.C < Cc
+H.Tout = H.Tin - C.C./H.C.*(C.Tout-C.Tin);
 
-%% Figure
-fprintf('Heat capacities:\tCpH = %0.4e,\tCpC = %0.4e\n', CpH, CpC)
-fprintf('Mass flows:\t\t\tmdotH = %3.2f,\t\tmdotC = %3.2f\n', mdotH, mdotC)
-fprintf('Nondimensional:\t\tNTU = %0.3f,\t\teps = %0.5f\n', NTU, eps)
-fprintf('Heat transfer:\t\tUA = %0.3e\n',UA)
+% For counterflow
+dT1 = H.Tout - C.Tin;
+dT2 = H.Tin - C.Tout;
+dTlm = (dT2 - dT1)./log(dT2./dT1);
 
-figure()
-title('Counterflow configuration')
-plot([0,1],[TCout, TCin], [0,1],[THin,THout]);
-grid on;
-legend('Cold', 'Hot');
-xlabel('Length [-]')
-ylabel('Temperature [K]')
+UA = Qdot./dTlm;
+NTU = UA./H.C; % [-] Known that H.C < Cc
+
+% Determine unknowns from NTU == 3
+H.C =    double(vpasolve(NTU==3, H.C));
+CH = H.C;
+CR =    double(subs(CR));
+H.Tout = double(subs(H.Tout));
+dT1 =   double(subs(dT1));
+dTlm =  double(subs(dTlm));
+UA =    double(subs(UA));
+NTU =   double(subs(NTU));
+clear('CH');
+
+% Determine H.Cp from H.Tout and H.Tin
+H.Tm = (H.Tout + H.Tin)/2;
+H.Cp = XSteam('CpL_T', H.Tm)*1000;
+
+% Calcualte H.mdot from H.C and H.Cp
+H.mdot = H.C/H.Cp;
+
+% Calculate effectiveness
+eps = (1-exp(-NTU.*(1-CR)))./(1-CR.*exp(-NTU.*(1-CR)));
+
+% Saturation pressure at given temperature
+H.p = XSteam('psat_T', H.Tm);
+C.p = XSteam('psat_T', C.Tm);
+
+% Determine mean density
+H.rho = XSteam('rhoL_T', H.Tm);
+C.rho = XSteam('rhoL_T', C.Tm);
+
+% Determine average dynamic viscosity (assumed saturated liquid p & T)
+H.mu = XSteam('my_pT', H.p, H.Tm*.99999); % T multiplied by .99 to ensure liquid domain
+C.mu = XSteam('my_pT', C.p, C.Tm*.999);
+
+% Determine thermal conductivity
+H.k = XSteam('tcL_T', H.Tm);
+C.k = XSteam('tcL_T', C.Tm);
+
+% Determine Prandtl number
+H.Pr = H.Cp*H.mu/H.k;
+C.Pr = C.Cp*C.mu/C.k;
+
+%% Heat exchanger
+H.ID = 20e-3;
+H.OD = H.ID + 2*2e-3;
+H.pitch = 1.25*H.OD; % Distance between centers of two tubes 1.25 OD is conventional
+H.Ntube = 300;
+H.Npass = 4;
+H.L = 5;
+
+% https://www.engineeringtoolbox.com/smaller-circles-in-larger-circle-d_1849.html
+C.ID = 1.2;
+C.L = H.L;
+
+% Unsure about C.h (effective diameter)
+[H,C] = shellTube(H,C);
+
+kWall = 50; % Steel = 50 W/m/K
+U = (1/C.h + (H.OD-H.ID)/2/kWall + 1/H.h)^-1;
+%% Figures & display
+clc
+% fprintf('THERMAL PROPERTIES OF FLUIDS\n')
+fprintf('\t\t\t\tHOT SIDE\t\tCOLD SIDE\t\tUNIT\n')
+fprintf('Temp. in:\t\tTin = %0.2f,\tTin = %0.2f\t\t[deg C]\n', H.Tin, C.Tin)
+fprintf('Temp. out:\t\tTout = %0.2f,\tTout = %0.2f\t[deg C]\n', H.Tout, C.Tout)
+fprintf('Mean temp.:\t\tTm = %0.2f,\tTm = %0.2f\t\t[deg C]\n\n', H.Tm, C.Tm)
+fprintf('\t\t\t\tHOT SIDE\t\tCOLD SIDE\t\tUNIT\n')
+fprintf('Heat capacity:\tCp = %0.2f,\tC.Cp = %0.2f\t[J/kg/K]\n', H.Cp, C.Cp)
+fprintf('Mass flows:\t\tmdot = %3.2f,\tmdot = %3.2f\t[kg/s]\n', H.mdot, C.mdot)
+fprintf('Density:\t\trho = %0.2f,\trho = %0.2f\t[kg/m3]\n',H.rho, C.rho)
+fprintf('Dyn. visc.:\t\tmu = %0.3e,\tmu = %0.3e\t[Pa s]\n',H.mu, C.mu)
+fprintf('Therm. cond.:\tk = %0.4f,\t\tk = %0.4f\t\t[W/m/K]\n\n',H.k, C.k)
+
+fprintf('OVERALL & NONDIMENSIONAL PROPERTIES\n')
+fprintf('Heat transfer:\tUA = %0.3e\t[W/m2/K]\n',UA)
+fprintf('Transfer units:\tNTU = %0.2f\t\t[-]\n',NTU)
+fprintf('Effectiveness:\teps = %0.4f\t[-]\n', eps)
+
+% figure(1)
+% plot([0,1],[C.Tout, C.Tin], [0,1],[H.Tin,H.Tout]);
+% title('Counterflow configuration')
+% grid on;
+% legend('Cold', 'Hot');
+% xlabel('Length [-]')
+% ylabel('Temperature [K]')
