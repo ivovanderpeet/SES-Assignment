@@ -2,7 +2,7 @@ clear all; close all;
 %% Vary CR
 
 %% Constants
-n = 500;
+n = 1e3;
 vec = ones(1,n);
 vec2 = ones(1,2*n);
 
@@ -47,8 +47,14 @@ UA = Qdot./dT_lm;
 NTU = UA./Cmin;
 eps = (1-exp(-NTU.*(1-CR)))./(1-CR.*exp(-NTU.*(1-CR)));
 
+
+eps2 = zeros(1,2*n);
+eps2(hi==0) = (THin(hi==0)-THout(hi==0))./(THin(hi==0)-TCin(hi==0));
+eps2(hi==1) = (TCout(hi==1)-TCin(hi==1))./(THin(hi==1)-TCin(hi==1));
+eps2(eps2>1) = nan;
+
 %% Plot
-figure(1)
+figure()
 plot(CR(hi==0), eps(hi==0)); hold on
 plot(CR(hi==1), eps(hi==1))
 title('eps')
@@ -56,7 +62,15 @@ legend('Ch < Cc', 'Ch > Cc')
 grid on
 xlabel('CR')
 
-figure(2)
+figure()
+plot(CR(hi==0), eps2(hi==0)); hold on
+plot(CR(hi==1), eps2(hi==1))
+title('eps')
+legend('Ch < Cc', 'Ch > Cc')
+grid on
+xlabel('CR')
+
+figure()
 plot(CR(hi==0), NTU(hi==0)); hold on
 plot(CR(hi==1), NTU(hi==1))
 title('NTU')
@@ -65,26 +79,37 @@ grid on
 xlabel('CR')
 
 
-figure(3)
-plot(CR(hi==0), UA(hi==0)); hold on
-plot(CR(hi==1), UA(hi==1))
-title('UA')
-legend('Ch < Cc', 'Ch > Cc')
-grid on
-xlabel('CR')
+% figure(3)
+% plot(CR(hi==0), UA(hi==0)); hold on
+% plot(CR(hi==1), UA(hi==1))
+% title('UA')
+% legend('Ch < Cc', 'Ch > Cc')
+% grid on
+% xlabel('CR')
+% 
+% figure(4)
+% plot(CR(hi==0), mdotH(hi==0)); hold on
+% plot(CR(hi==1), mdotH(hi==1))
+% title('mdotH')
+% legend('Ch < Cc', 'Ch > Cc')
+% grid on
+% xlabel('CR')
+% 
+% figure(5)
+% plot(CR(hi==0), Ch(hi==0)); hold on
+% plot(CR(hi==1), Ch(hi==1))
+% title('Ch')
+% legend('Ch < Cc', 'Ch > Cc')
+% grid on
+% xlabel('CR')
 
-figure(4)
-plot(CR(hi==0), mdotH(hi==0)); hold on
-plot(CR(hi==1), mdotH(hi==1))
-title('mdotH')
+figure()
+plot(NTU(hi==0),eps2(hi==0)); hold on
+plot(NTU(hi==1),eps2(hi==1))
+title('eps-NTU')
 legend('Ch < Cc', 'Ch > Cc')
 grid on
-xlabel('CR')
-
-figure(5)
-plot(CR(hi==0), Ch(hi==0)); hold on
-plot(CR(hi==1), Ch(hi==1))
-title('Ch')
-legend('Ch < Cc', 'Ch > Cc')
-grid on
-xlabel('CR')
+xlabel('NTU')
+ylabel('eps2')
+text(NTU(n-1),eps2(n-1),"Hier is CR = 1")
+text(NTU(n+2),eps2(n+2),"Hier is CR = 1")
