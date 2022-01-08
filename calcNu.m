@@ -1,11 +1,5 @@
 function Nu = calcNu(dat)
-if dat.Re < 2300
-    n = 1;
-elseif dat.Re < 1e5
-    n = 0.25;
-else
-    n = 0.2;
-end
+n = 0.35;
 
 if dat.Re > 1e4 && dat.Pr < 160 && dat.Pr > 0.7
     Nu = 0.023*dat.Re^(4/5)*dat.Pr^n;

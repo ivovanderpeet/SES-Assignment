@@ -5,7 +5,7 @@ H.CF.A = H.CF.H*H.CF.W;
 H.CF.Atot = H.CF.A*H.CF.Nplate; %% OF MOET DIT 1200 ZIJN?
 H.CF.v = H.V/H.CF.Atot;
 
-PH = 2*H.CF.H + 2*H.CF.W; % Inner perimeter
+PH = 2*H.CF.H + 2*H.CF.W;
 H.CF.De = 4*H.CF.A/PH;
 H.CF.Re = H.rho*H.CF.v*H.CF.De/H.mu;
 
@@ -25,7 +25,7 @@ C.CF.A = C.CF.H*C.CF.W;
 C.CF.Atot = C.CF.A*C.CF.Nplate;
 C.CF.v = C.V/C.CF.Atot;
 
-PC = 2*C.CF.H + 2*C.CF.W; % Inner perimeter
+PC = 2*C.CF.H + 2*C.CF.W;
 C.CF.De = 4*C.CF.A/PC;
 C.CF.Re = C.rho*C.CF.v*C.CF.De/C.mu;
 
