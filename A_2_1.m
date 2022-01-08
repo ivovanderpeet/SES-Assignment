@@ -149,6 +149,28 @@ CF.kwall = 50; % STEEL
 CF.U = (1/H.CF.h + CF.t/CF.kwall + 1/C.CF.h)^-1;
 CF.A = UA/CF.U;
 
+%% Counterflow ducts heat exchanger
+H.CD.L = 3;
+C.CD.L = H.CD.L;
+H.CD.H = 10e-3;
+C.CD.H = H.CD.H;
+H.CD.W = 10e-3;
+C.CD.W = H.CD.W;
+H.CD.Nplatey = 25;
+C.CD.Nplatey = H.CD.Nplatey;
+H.CD.Nplatex = 50;
+C.CD.Nplatex = H.CD.Nplatex;
+
+H.CD.rough = 0.1e-3;
+C.CD.rough = H.CD.rough;
+
+[H,C] = counterDucts(H,C);
+
+% Heat transfer coef.
+CD.t = 2e-3;
+CD.kwall = 50; % STEEL
+CD.U = (1/H.CD.h + CD.t/CD.kwall + 1/C.CD.h)^-1;
+CD.A = UA/CD.U;
 
 %% Validate calculations
 eps2 = (C.Tout-C.Tin)/(H.Tin-C.Tin);
@@ -190,6 +212,12 @@ fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',CF.U)
 fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',CF.A)
 fprintf('Outer area:\t\tAO = %0.2f\t\t[m2]\n',C.CF.Aht)
 fprintf('Inner area:\t\tAI = %0.2f\t\t[m2]\n',H.CF.Aht)
+
+fprintf('COUNTERFLOW DUCTS HEAT EXCHANGER PROPERTIES\n')
+fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',CD.U)
+fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',CD.A)
+fprintf('Outer area:\t\tAO = %0.2f\t\t[m2]\n',C.CD.Aht)
+fprintf('Inner area:\t\tAI = %0.2f\t\t[m2]\n',H.CD.Aht)
 
 % figure(1)
 % plot([0,1],[C.Tout, C.Tin], [0,1],[H.Tin,H.Tout]);
