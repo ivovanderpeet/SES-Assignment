@@ -1,14 +1,17 @@
 clear all; close all; clc;
+addpath('C:\Users\ivova\OneDrive - TU Eindhoven\03 Education\Masters Courses\4EM70 Sustainable Energy Sources\SES-Assignment\functions')
+
+
 %% Constants
 H.Tin = 240;     % [C] Given
 C.Tout = 110;    % [C] Given
 C.Qdot = 5e7;      % [W] Given
-C.mdot = 150;    % [kg/s] Given
+C.V = 150e-3;    % [kg/s] Given
 H.p = 50e5;
 C.p = 1.53e5;
 
 %% Loop for determining C.Cp
-C = getDHinfo(C,Qdot);
+C = getToutCp(C);
 
 %% Symbolic hot-side stuff
 syms CH
@@ -22,7 +25,7 @@ dT1 = H.Tout - C.Tin;
 dT2 = H.Tin - C.Tout;
 dTlm = (dT2 - dT1)./log(dT2./dT1);
 
-UA = Qdot./dTlm;
+UA = C.Qdot./dTlm;
 NTU = UA./C.C; % [-] Given that C.C < H.C
 
 % Determine unknowns from CR = 1
@@ -34,7 +37,7 @@ dT1 =   double(subs(dT1));
 
 if CR == 1
     dTlm = dT1;
-    UA = Qdot/dTlm;
+    UA = C.Qdot/dTlm;
     NTU = UA/C.C;
 else
     dTlm =  double(subs(dTlm));

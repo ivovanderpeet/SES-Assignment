@@ -1,5 +1,5 @@
 function sat = getSatCurve()
-T = linspace(-100,374,1000);
+T = linspace(-10,374,1000);
 len = length(T);
 sL = zeros(size(T));
 sV = sL;
@@ -12,8 +12,8 @@ for i = 1:len
     hV(i) = XSteam('hV_T', T(i))*1e3;
 end
 
-sat.T = [T,T];
-sat.s = [sL,sV];
-sat.h = [hL,hV];
+sat.T = [T(~isnan(hL)),flip(T(~isnan(hV)))];
+sat.s = [sL(~isnan(sL)),flip(sV(~isnan(sV)))];
+sat.h = [hL(~isnan(hL)),flip(hV(~isnan(hV)))];
 
 end

@@ -1,4 +1,6 @@
 clear all; close all; clc
+addpath('C:\Users\ivova\OneDrive - TU Eindhoven\03 Education\Masters Courses\4EM70 Sustainable Energy Sources\SES-Assignment\functions')
+
 % 1. Saturated liquid   (Condensor out, pump in)
 % 2. Compressed liquid  (Pump out, economizer in)
 % 3. Saturated liquid   (Economizer out, evaporator in)
@@ -70,9 +72,7 @@ w(5) = h(5)-h(4);
 Recon.mdot = Rcond.Qdot/q(1);
 Revap.mdot = Recon.mdot;
 Rcond.mdot = Recon.mdot;
-x5 = XSteam('x_ps', p(5), s(5));
-
-
+x5 = XSteam('x_ps', p(5)/1e5, s(5)/1e3);
 
 %% Properties of evaporator
 
@@ -92,11 +92,11 @@ Revap.k = XSteam('tc_pT', Revap.p/1e5, Revap.Tm*0.99999);
 % Well-side
 Wevap.mdot = 300; % [kg/s] DEZE MAG JE KIEZEN
 Wevap.p = 50e5; % SCHATING MOET NOG VERANDERD WORDEN
+Wevap.Qdot = -Revap.Qdot;
 Wevap.Tin = 240;
-[Revap, Wevap] = getToutCp(Revap,Wevap);
+Wevap = getToutCp(Wevap);
 
 %% Properties of economizer
-Wecon.mdot = Wevap.mdot;
 
 % Temperatures 
 Recon.Tin = T(2);
@@ -106,24 +106,23 @@ Recon.p = p(2);
 Recon.q = q(3);
 Recon.Qdot = Recon.q*Recon.mdot;
 
+Wecon.mdot = Wevap.mdot;
 Wecon.Tin = Wevap.Tout;
 Wecon.p = 50e5; % SCHATTING MOET NOG VERANDERD WORDEN
-[Recon,Wecon] = getToutCp(Recon,Wecon);
-% Wecon.Tout = Recon.mdot/(Wecon.mdot*Wecon.Cp)*(h(2)-h(3))+Wecon.Tin;
-
-
+Wecon.Qdot = -Recon.Qdot;
+Wecon = getToutCp(Wecon);
 
 %% Properties of condenser
 % Temperatures
 Rcond.Tin = T(5);
 Rcond.Tout = T(1);
 Rcond.Tm = (Rcond.Tin+Rcond.Tout)/2;
-% DHcond.Tin = 30.zoveel
-DHcond.Tout = 110;
 
+DHcond.Tout = 110;
 DHcond.V = 150e-3;  % [m3/s]
 DHcond.p = 1.53e5;
-DHcond = getDHinfo(DHcond);
+DHcond = getToutCp(DHcond);
+
 %% Figure
 sat = getSatCurve();
 
@@ -135,14 +134,14 @@ sat = getSatCurve();
 % ylabel('Temperature [C]')
 % text(s,T,{'1','2','3','4','5'})
 % grid on
-% 
-figure(2)
-plot([h,h(1)],[T,T(1)]); hold on
-plot(sat.h,sat.T);
-plot([h(1),h(5)],[DHcond.Tin,DHcond.Tout]);
-plot([h(2),h(3),h(4)],[Wecon.Tout,Wecon.Tin,Wevap.Tin]);
-title('Pinch diagram')
-xlabel('Enthalpy h [J/kg]')
-ylabel('Temperature [C]')
-text(h,T,{'1','2','3','4','5'})
-grid on
+
+% figure(2)
+% plot([h,h(1)],[T,T(1)]); hold on
+% plot(sat.h,sat.T);
+% plot([h(1),h(5)],[DHcond.Tin,DHcond.Tout]);
+% plot([h(2),h(3),h(4)],[Wecon.Tout,Wecon.Tin,Wevap.Tin]);
+% title('Pinch diagram')
+% xlabel('Enthalpy h [J/kg]')
+% ylabel('Temperature [C]')
+% text(h,T,{'1','2','3','4','5'})
+% grid on
