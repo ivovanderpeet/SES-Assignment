@@ -2,32 +2,13 @@ clear all; close all; clc;
 %% Constants
 H.Tin = 240;     % [C] Given
 C.Tout = 110;    % [C] Given
-Qdot = 5e7;      % [W] Given
+C.Qdot = 5e7;      % [W] Given
 C.mdot = 150;    % [kg/s] Given
 H.p = 50e5;
 C.p = 1.53e5;
 
 %% Loop for determining C.Cp
-
-% Initial Guess
-C.Cp = 4200;     % [J/kg/K] Assumed constant
-
-% Iteratively determine C.Cp
-ERR = 1;
-while ERR > 1e-10
-    C.C = C.mdot*C.Cp;
-    C.Tin = C.Tout - Qdot/(C.mdot*C.Cp); % [K] Calculate cold-side inlet temperature
-    C.Tm = (C.Tin + C.Tout)/2;
-    C.Cp_ = XSteam('Cp_pT', C.p/1e5, C.Tm)*1000;
-    ERR = abs(C.Cp_ - C.Cp)/C.Cp;
-
-    C.Cp = C.Cp_;
-end
-clear('ERR');
-
-% Final value for C.Tin and C.Tm
-C.Tin = C.Tout - Qdot/(C.mdot*C.Cp); % [K] Calculate cold-side inlet temperature
-C.Tm = (C.Tin + C.Tout)/2;
+C = getDHinfo(C,Qdot);
 
 %% Symbolic hot-side stuff
 syms CH
