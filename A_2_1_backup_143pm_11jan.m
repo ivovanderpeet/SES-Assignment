@@ -4,8 +4,6 @@ H.Tin = 240;     % [C] Given
 C.Tout = 110;    % [C] Given
 Qdot = 5e7;      % [W] Given
 C.mdot = 150;    % [kg/s] Given
-H.p = 50e5;
-C.p = 1.53e5;
 
 %% Loop for determining C.Cp
 
@@ -18,7 +16,7 @@ while ERR > 1e-10
     C.C = C.mdot*C.Cp;
     C.Tin = C.Tout - Qdot/(C.mdot*C.Cp); % [K] Calculate cold-side inlet temperature
     C.Tm = (C.Tin + C.Tout)/2;
-    C.Cp_ = XSteam('Cp_pT', C.p/1e5, C.Tm)*1000;
+    C.Cp_ = XSteam('CpL_T', C.Tm)*1000;
     ERR = abs(C.Cp_ - C.Cp)/C.Cp;
 
     C.Cp = C.Cp_;
@@ -65,7 +63,7 @@ clear('CH');
 
 % Determine H.Cp from H.Tout and H.Tin
 H.Tm = (H.Tout + H.Tin)/2;
-H.Cp = XSteam('Cp_pT', H.p/1e5, H.Tm)*1000;
+H.Cp = XSteam('CpL_T', H.Tm)*1000;
 
 % Calcualte H.mdot from H.C and H.Cp
 H.mdot = H.C/H.Cp;
@@ -77,17 +75,21 @@ else
     eps = (1-exp(-NTU.*(1-CR)))./(1-CR.*exp(-NTU.*(1-CR)));
 end
 
-% Determine mean density
-H.rho = XSteam('rho_pT', H.p/1e5, H.Tm);
-C.rho = XSteam('rho_pT', C.p/1e5, C.Tm);
+% Saturation pressure at given temperature
+H.psat = XSteam('psat_T', H.Tm);
+C.psat = XSteam('psat_T', C.Tm);
 
-% Determine average dynamic viscosity
-H.mu = XSteam('my_pT', H.p/1e5, H.Tm);
-C.mu = XSteam('my_pT', C.p/1e5, C.Tm);
+% Determine mean density
+H.rho = XSteam('rhoL_T', H.Tm);
+C.rho = XSteam('rhoL_T', C.Tm);
+
+% Determine average dynamic viscosity (assumed saturated liquid p & T)
+H.mu = XSteam('my_pT', H.psat, H.Tm*.99999); % T multiplied by .99 to ensure liquid domain
+C.mu = XSteam('my_pT', C.psat, C.Tm*.999);
 
 % Determine thermal conductivity
-H.k = XSteam('tc_pT', H.p/1e5, H.Tm);
-C.k = XSteam('tc_pT', C.p/1e5, C.Tm);
+H.k = XSteam('tcL_T', H.Tm);
+C.k = XSteam('tcL_T', C.Tm);
 
 % Determine Prandtl number
 H.Pr = H.Cp*H.mu/H.k;

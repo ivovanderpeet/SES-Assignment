@@ -14,9 +14,6 @@ H.CD.Aht = PH*H.CD.L*(H.CD.Nplatex*H.CD.Nplatey*2 - (H.CD.Nplatex + H.CD.Nplatey
 H.CD.Pr = H.Pr;
 H.CD.Nu = calcNu(H.CD);
 H.CD.h = H.CD.Nu*H.k/H.CD.De;
-if H.CD.h > 3e3
-    H.CD.h = 3e3;
-end
 
 % Pressure drop
 H.CD.f = getFriction(H.CD);
@@ -38,9 +35,6 @@ C.CD.Aht = C.CD.L*PC*(C.CD.Nplatex*C.CD.Nplatey*2 - (C.CD.Nplatex+C.CD.Nplatey)/
 C.CD.Pr = C.Pr;
 C.CD.Nu = calcNu(C.CD);
 C.CD.h = C.CD.Nu*C.k/C.CD.De;
-if H.CD.h > 3e3
-    H.CD.h = 3e3;
-end
 
 % Pressure drop
 C.CD.f = getFriction(C.CD);
