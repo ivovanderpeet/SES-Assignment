@@ -17,8 +17,8 @@ w = zeros(1,5); % [kJ/kg]
 rho = zeros(1,5);
 
 % Constants
-DHcond.Qdot = 50e6; % [W]
-Rcond.Qdot = -DHcond.Qdot;
+Cond.DH.Qdot = 50e6; % [W]
+Cond.R.Qdot = -Cond.DH.Qdot;
 
 %% Follow the cycle
 % 1. Saturated liquid   (Condensor out, pump in)
@@ -69,114 +69,232 @@ q(4) = h(4)-h(3);
 w(5) = h(5)-h(4);
 
 % Checks after calculating cycle
-Recon.mdot = Rcond.Qdot/q(1);
-Revap.mdot = Recon.mdot;
-Rcond.mdot = Recon.mdot;
+Econ.R.mdot = Cond.R.Qdot/q(1);
+Evap.R.mdot = Econ.R.mdot;
+Cond.R.mdot = Econ.R.mdot;
 x5 = XSteam('x_ps', p(5)/1e5, s(5)/1e3);
 
 %% Properties of evaporator
-
 % Rankine cycle-side
-Revap.Tin = T(3);
-Revap.Tout = T(4);
-Revap.Tm = (Revap.Tin+Revap.Tout)/2;
-Revap.p = p(3);
-Revap.q = q(4);
-Revap.Qdot = Revap.q*Revap.mdot;
+Evap.R.Tin = T(3);
+Evap.R.Tout = T(4);
+Evap.R.Tm = (Evap.R.Tin+Evap.R.Tout)/2;
+Evap.R.p = p(3);
+Evap.R.q = q(4);
+Evap.R.Qdot = Evap.R.q*Evap.R.mdot;
 
-Revap.Cp = XSteam('Cp_pT', Revap.p/1e5, Revap.Tm*0.99999)*1e3;
-Revap.rho = XSteam('rho_pT', Revap.p/1e5, Revap.Tm*0.99999);
-Revap.mu = XSteam('my_pT', Revap.p/1e5, Revap.Tm*0.99999);
-Revap.k = XSteam('tc_pT', Revap.p/1e5, Revap.Tm*0.99999);
+Evap.R.Cp = XSteam('Cp_pT', Evap.R.p/1e5, Evap.R.Tm*0.99999)*1e3;
+Evap.R.rho = XSteam('rho_pT', Evap.R.p/1e5, Evap.R.Tm*0.99999);
+Evap.R.mu = XSteam('my_pT', Evap.R.p/1e5, Evap.R.Tm*0.99999);
+Evap.R.k = XSteam('tc_pT', Evap.R.p/1e5, Evap.R.Tm*0.99999);
 
 % Well-side
-Wevap.mdot = 300; % [kg/s] DEZE MAG JE KIEZEN
-Wevap.p = 50e5; % SCHATING MOET NOG VERANDERD WORDEN
-Wevap.Qdot = -Revap.Qdot;
-Wevap.Tin = 240;
-Wevap = getToutCp(Wevap);
+Evap.W.mdot = 300; % [kg/s] DEZE MAG JE KIEZEN
+Evap.W.p = 50e5; % SCHATING MOET NOG VERANDERD WORDEN
+Evap.W.Qdot = -Evap.R.Qdot;
+Evap.W.Tin = 240;
+Evap.W = getToutCp(Evap.W);
 
 %% Properties of economizer
 
 % Temperatures 
-Recon.Tin = T(2);
-Recon.Tout = T(3);
-Recon.Tm = (Recon.Tin+Recon.Tout)/2;
-Recon.p = p(2);
-Recon.q = q(3);
-Recon.Qdot = Recon.q*Recon.mdot;
+Econ.R.Tin = T(2);
+Econ.R.Tout = T(3);
+Econ.R.Tm = (Econ.R.Tin+Econ.R.Tout)/2;
+Econ.R.p = p(2);
+Econ.R.q = q(3);
+Econ.R.Qdot = Econ.R.q*Econ.R.mdot;
 
-Wecon.mdot = Wevap.mdot;
-Wecon.Tin = Wevap.Tout;
-Wecon.p = 50e5; % SCHATTING MOET NOG VERANDERD WORDEN
-Wecon.Qdot = -Recon.Qdot;
-Wecon = getToutCp(Wecon);
+Econ.W.mdot = Evap.W.mdot;
+Econ.W.Tin = Evap.W.Tout;
+Econ.W.p = 50e5; % SCHATTING MOET NOG VERANDERD WORDEN
+Econ.W.Qdot = -Econ.R.Qdot;
+Econ.W = getToutCp(Econ.W);
 
 %% Properties of condenser
 % Temperatures
-Rcond.Tin = T(5);
-Rcond.Tout = T(1);
-Rcond.Tm = (Rcond.Tin+Rcond.Tout)/2;
-Rcond.p = p(1);
+Cond.R.Tin = T(5);
+Cond.R.Tout = T(1);
+Cond.R.Tm = (Cond.R.Tin+Cond.R.Tout)/2;
 
-DHcond.Tout = 110;
-DHcond.V = 150e-3;  % [m3/s]
-DHcond.p = 1.53e5;
-DHcond = getToutCp(DHcond);
+Cond.DH.Tout = 110;
+Cond.DH.V = 150e-3;  % [m3/s]
+Cond.DH.p = 1.53e5;
+Cond.DH = getToutCp(Cond.DH);
 
 %% Condensor heat exchanger
-
 % Determine dTlm and UA
-dT1 = Rcond.Tout - DHcond.Tin;
-dT2 = Rcond.Tin - DHcond.Tout;
-dTlm = (dT2 - dT1)./log(dT2./dT1);
-UA = -Rcond.Qdot./dTlm; %Rcond.Qdot = DHcond.Qdot
+Cond.dT1 = Cond.R.Tout - Cond.DH.Tin;
+Cond.dT2 = Cond.R.Tin - Cond.DH.Tout;
+Cond.dTlm = (Cond.dT2 - Cond.dT1)./log(Cond.dT2./Cond.dT1);
+Cond.UA = -Cond.R.Qdot./Cond.dTlm; %Cond.R.Qdot = Cond.DH.Qdot
 
 % Determine mean density
-DHcond.rho = XSteam('rho_pT', DHcond.p/1e5, DHcond.Tm);
+Cond.R.rho = nan;
+Cond.DH.rho = XSteam('rho_pT', Cond.DH.p/1e5, Cond.DH.Tm);
 
 % Determine average dynamic viscosity
-DHcond.mu = XSteam('my_pT', DHcond.p/1e5, DHcond.Tm);
+Cond.R.mu = nan;
+Cond.DH.mu = XSteam('my_pT', Cond.DH.p/1e5, Cond.DH.Tm);
 
 % Determine thermal conductivity
-DHcond.k = XSteam('tc_pT', DHcond.p/1e5, DHcond.Tm);
+Cond.R.k = nan;
+Cond.DH.k = XSteam('tc_pT', Cond.DH.p/1e5, Cond.DH.Tm);
 
 %Determine heat capacity
-DHcond.Cp = XSteam('Cp_pT', DHcond.p/1e5, DHcond.Tm)*1000;
+Cond.R.Cp = nan;
+Cond.DH.Cp = XSteam('Cp_pT', Cond.DH.p/1e5, Cond.DH.Tm)*1000;
 
 % Determine Prandtl number
-DHcond.Pr = DHcond.Cp*DHcond.mu/DHcond.k;
+Cond.R.Pr = nan;
+Cond.DH.Pr = Cond.DH.Cp*Cond.DH.mu/Cond.DH.k;
 
 % Volume flow
-% Rcond.V = Rcond.mdot/Rcond.rho;
-Rcond.V = nan;
-DHcond.V = DHcond.mdot/DHcond.rho;
+Cond.R.V = nan;
+Cond.DH.V = Cond.DH.mdot/Cond.DH.rho;
 
 %HX
-Rcond.HX.L = 3.7;
-DHcond.HX.L = Rcond.HX.L;
-Rcond.HX.D = 20e-3;
-DHcond.HX.D = Rcond.HX.D;
+Cond.R.L = 3.7;
+Cond.DH.L = Cond.R.L;
+Cond.R.D = 20e-3;
+Cond.DH.D = Cond.R.D;
 
-Rcond.HX.Nplatey = 15;
-DHcond.HX.Nplatey = Rcond.HX.Nplatey;
-Rcond.HX.Nplatex = 15;
-DHcond.HX.Nplatex = Rcond.HX.Nplatex;
+Cond.R.Nplatey = 15;
+Cond.DH.Nplatey = Cond.R.Nplatey;
+Cond.R.Nplatex = 15;
+Cond.DH.Nplatex = Cond.R.Nplatex;
 
-CD.W = Rcond.HX.Nplatex*Rcond.HX.D*2;
-CD.H = Rcond.HX.Nplatey*Rcond.HX.D*2;
-CD.L = Rcond.HX.L;
+Cond.Wi = Cond.R.Nplatex*Cond.R.D*2;
+Cond.Hi = Cond.R.Nplatey*Cond.R.D*2;
+Cond.L = Cond.R.L;
 
-Rcond.HX.rough = 0.015e-3;
-DHcond.HX.rough = Rcond.HX.rough;
+Cond.R.rough = 0.015e-3;
+Cond.DH.rough = Cond.R.rough;
 
-[Cond.R,Cond.DH] = HX(Cond.R,Cond.DH);
+[Cond.R] = counterDucts(Cond.R);
+[Cond.DH] = counterDucts(Cond.DH);
 
 % Heat transfer coef.
-CD.t = 1e-3;
-CD.kwall = 50; % STEEL
-CD.U = (CD.t/CD.kwall + 1/DHcond.HX.h)^-1;
-CD.A = UA/CD.U;
+Cond.t = 1e-3;
+Cond.kwall = 50; % STEEL
+Cond.U = (Cond.t/Cond.kwall + 1/Cond.DH.h)^-1;
+Cond.A = Cond.UA/Cond.U;
+
+%% Evaporator heat exchanger
+% Determine dTlm and UA
+Evap.dT1 = Evap.R.Tout - Evap.W.Tin;
+Evap.dT2 = Evap.R.Tin - Evap.W.Tout;
+Evap.dTlm = (Evap.dT2 - Evap.dT1)./log(Evap.dT2./Evap.dT1);
+Evap.UA = -Evap.R.Qdot./Evap.dTlm; %Evap.R.Qdot = Evap.W.Qdot
+
+% Determine mean density
+Evap.R.rho = nan;
+Evap.W.rho = XSteam('rho_pT', Evap.W.p/1e5, Evap.W.Tm);
+
+% Determine average dynamic viscosity
+Evap.R.mu = nan;
+Evap.W.mu = XSteam('my_pT', Evap.W.p/1e5, Evap.W.Tm);
+
+% Determine thermal Evapuctivity
+Evap.R.k = nan;
+Evap.W.k = XSteam('tc_pT', Evap.W.p/1e5, Evap.W.Tm);
+
+%Determine heat capacity
+Evap.R.Cp = nan;
+Evap.W.Cp = XSteam('Cp_pT', Evap.W.p/1e5, Evap.W.Tm)*1000;
+
+% Determine Prandtl number
+Evap.R.Pr = nan;
+Evap.W.Pr = Evap.W.Cp*Evap.W.mu/Evap.W.k;
+
+% Volume flow
+Evap.R.V = nan;
+Evap.W.V = Evap.W.mdot/Evap.W.rho;
+
+%HX
+Evap.R.L = 3.7;
+Evap.W.L = Evap.R.L;
+Evap.R.D = 20e-3;
+Evap.W.D = Evap.R.D;
+
+Evap.R.Nplatey = 15;
+Evap.W.Nplatey = Evap.R.Nplatey;
+Evap.R.Nplatex = 15;
+Evap.W.Nplatex = Evap.R.Nplatex;
+
+Evap.Wi = Evap.R.Nplatex*Evap.R.D*2;
+Evap.Hi = Evap.R.Nplatey*Evap.R.D*2;
+Evap.L = Evap.R.L;
+
+Evap.R.rough = 0.015e-3;
+Evap.W.rough = Evap.R.rough;
+
+[Evap.R] = counterDucts(Evap.R);
+[Evap.W] = counterDucts(Evap.W);
+
+% Heat transfer coef.
+Evap.t = 1e-3;
+Evap.kwall = 50; % STEEL
+Evap.U = (Evap.t/Evap.kwall + 1/Evap.W.h)^-1;
+Evap.A = Evap.UA/Evap.U;
+
+%% Economizer heat exchanger
+% Determine dTlm and UA
+Econ.dT1 = Econ.R.Tout - Econ.W.Tin;
+Econ.dT2 = Econ.R.Tin - Econ.W.Tout;
+Econ.dTlm = (Econ.dT2 - Econ.dT1)./log(Econ.dT2./Econ.dT1);
+Econ.UA = -Econ.R.Qdot./Econ.dTlm; %Econ.R.Qdot = Econ.W.Qdot
+
+% Determine mean density
+Econ.R.rho = XSteam('rho_pT', Econ.R.p/1e5, Econ.R.Tm);
+Econ.W.rho = XSteam('rho_pT', Econ.W.p/1e5, Econ.W.Tm);
+
+% Determine average dynamic viscosity
+Econ.R.mu = XSteam('my_pT', Econ.R.p/1e5, Econ.R.Tm);
+Econ.W.mu = XSteam('my_pT', Econ.W.p/1e5, Econ.W.Tm);
+
+% Determine thermal Econuctivity
+Econ.R.k = XSteam('tc_pT', Econ.R.p/1e5, Econ.R.Tm);
+Econ.W.k = XSteam('tc_pT', Econ.W.p/1e5, Econ.W.Tm);
+
+%Determine heat capacity
+Econ.R.Cp = XSteam('Cp_pT', Econ.R.p/1e5, Econ.R.Tm)*1000;
+Econ.W.Cp = XSteam('Cp_pT', Econ.W.p/1e5, Econ.W.Tm)*1000;
+
+% Determine Prandtl number
+Econ.R.Pr = Econ.R.Cp*Econ.R.mu/Econ.R.k;
+Econ.W.Pr = Econ.W.Cp*Econ.W.mu/Econ.W.k;
+
+% Volume flow
+Econ.R.V = Econ.R.mdot/Econ.R.rho;
+Econ.W.V = Econ.W.mdot/Econ.W.rho;
+
+%HX
+Econ.R.L = 3.7;
+Econ.W.L = Econ.R.L;
+Econ.R.D = 20e-3;
+Econ.W.D = Econ.R.D;
+
+Econ.R.Nplatey = 15;
+Econ.W.Nplatey = Econ.R.Nplatey;
+Econ.R.Nplatex = 15;
+Econ.W.Nplatex = Econ.R.Nplatex;
+
+Econ.Wi = Econ.R.Nplatex*Econ.R.D*2;
+Econ.Hi = Econ.R.Nplatey*Econ.R.D*2;
+Econ.L = Econ.R.L;
+
+Econ.R.rough = 0.015e-3;
+Econ.W.rough = Econ.R.rough;
+
+[Econ.R] = counterDucts(Econ.R);
+[Econ.W] = counterDucts(Econ.W);
+
+% Heat transfer coef.
+Econ.t = 1e-3;
+Econ.kwall = 50; % STEEL
+Econ.U = (1/Econ.R.h + Econ.t/Econ.kwall + 1/Econ.W.h)^-1;
+Econ.A = Econ.UA/Econ.U;
 
 %% Figure
 sat = getSatCurve();
@@ -193,8 +311,8 @@ grid on
 figure(2)
 plot([h,h(1)],[T,T(1)]); hold on
 plot(sat.h,sat.T);
-plot([h(1),h(5)],[DHcond.Tin,DHcond.Tout]);
-plot([h(2),h(3),h(4)],[Wecon.Tout,Wecon.Tin,Wevap.Tin]);
+plot([h(1),h(5)],[Cond.DH.Tin,Cond.DH.Tout]);
+plot([h(2),h(3),h(4)],[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
 title('Pinch diagram')
 xlabel('Enthalpy h [J/kg]')
 ylabel('Temperature [C]')
@@ -202,14 +320,40 @@ text(h,T,{'1','2','3','4','5'})
 grid on
 
 fprintf('CONDENSOR HEAT EXCHANGER PROPERTIES\n')
-fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',CD.U)
-fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',CD.A)
-fprintf('Total length:\tL = %0.2f\t\t[m]\n',CD.L)
-fprintf('Total width:\tW = %0.2f\t\t[m]\n',CD.W)
-fprintf('Total height:\tH = %0.2f\t\t[m]\n',CD.H)
-fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', Rcond.HX.dp, DHcond.HX.dp)
-fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', Rcond.HX.h, DHcond.HX.h)
-fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Rcond.HX.Nu, DHcond.HX.Nu)
-fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', Rcond.HX.Aht, DHcond.HX.Aht)
-fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n', Rcond.HX.v, DHcond.HX.v)
-fprintf('Reynolds:\t\tRe = %0.3e\tRe = %0.3e\t[-]\n\n', Rcond.HX.Re, DHcond.HX.Re)
+fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',Cond.U)
+fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',Cond.A)
+fprintf('Total length:\tL = %0.2f\t\t[m]\n',Cond.L)
+fprintf('Total width:\tW = %0.2f\t\t[m]\n',Cond.Wi)
+fprintf('Total height:\tH = %0.2f\t\t[m]\n',Cond.Hi)
+fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', Cond.R.dp, Cond.DH.dp)
+fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', Cond.R.h, Cond.DH.h)
+fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Cond.R.Nu, Cond.DH.Nu)
+fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', Cond.R.Aht, Cond.DH.Aht)
+fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n', Cond.R.v, Cond.DH.v)
+fprintf('Reynolds:\t\tRe = %0.3e\tRe = %0.3e\t[-]\n\n', Cond.R.Re, Cond.DH.Re)
+
+fprintf('EVAPORATOR HEAT EXCHANGER PROPERTIES\n')
+fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',Evap.U)
+fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',Evap.A)
+fprintf('Total length:\tL = %0.2f\t\t[m]\n',Evap.L)
+fprintf('Total width:\tW = %0.2f\t\t[m]\n',Evap.Wi)
+fprintf('Total height:\tH = %0.2f\t\t[m]\n',Evap.Hi)
+fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', Evap.W.dp, Evap.R.dp)
+fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', Evap.W.h, Evap.R.h)
+fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Evap.W.Nu, Evap.R.Nu)
+fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', Evap.W.Aht, Evap.R.Aht)
+fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n', Evap.W.v, Evap.R.v)
+fprintf('Reynolds:\t\tRe = %0.3e\tRe = %0.3e\t[-]\n\n', Evap.W.Re, Evap.R.Re)
+
+fprintf('ECONOMIZER HEAT EXCHANGER PROPERTIES\n')
+fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',Econ.U)
+fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',Econ.A)
+fprintf('Total length:\tL = %0.2f\t\t[m]\n',Econ.L)
+fprintf('Total width:\tW = %0.2f\t\t[m]\n',Econ.Wi)
+fprintf('Total height:\tH = %0.2f\t\t[m]\n',Econ.Hi)
+fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', Econ.W.dp, Econ.R.dp)
+fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', Econ.W.h, Econ.R.h)
+fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Econ.W.Nu, Econ.R.Nu)
+fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', Econ.W.Aht, Econ.R.Aht)
+fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n', Econ.W.v, Econ.R.v)
+fprintf('Reynolds:\t\tRe = %0.3e\tRe = %0.3e\t[-]\n\n', Econ.W.Re, Econ.R.Re)
