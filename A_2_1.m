@@ -136,29 +136,31 @@ CF.U = (1/H.CF.h + CF.t/CF.kwall + 1/C.CF.h)^-1;
 CF.A = UA/CF.U;
 
 %% Counterflow ducts heat exchanger
-H.CD.L = 3.7;
-C.CD.L = H.CD.L;
-H.CD.D = 20e-3;
-C.CD.D = H.CD.D;
+CD.C = C;
+CD.H = H;
+CD.H.L = 3.7;
+CD.C.L = CD.H.L;
+CD.H.D = 20e-3;
+CD.C.D = CD.H.D;
 
-H.CD.Nplatey = 15;
-C.CD.Nplatey = H.CD.Nplatey;
-H.CD.Nplatex = 15;
-C.CD.Nplatex = H.CD.Nplatex;
+CD.H.Nplatey = 15;
+CD.C.Nplatey = CD.H.Nplatey;
+CD.H.Nplatex = 15;
+CD.C.Nplatex = CD.H.Nplatex;
 
-CD.W = H.CD.Nplatex*H.CD.D*2;
-CD.H = H.CD.Nplatey*H.CD.D*2;
-CD.L = H.CD.L;
+CD.W = CD.H.Nplatex*CD.H.D*2;
+CD.Height = CD.H.Nplatey*CD.H.D*2;
+CD.L = CD.H.L;
 
-H.CD.rough = 0.015e-3;
-C.CD.rough = H.CD.rough;
+CD.H.rough = 0.015e-3;
+CD.C.rough = CD.H.rough;
 
-[H,C] = counterDucts(H,C);
+[CD.H,CD.C] = counterDucts(CD.H,CD.C);
 
 % Heat transfer coef.
 CD.t = 1e-3;
 CD.kwall = 50; % STEEL
-CD.U = (1/H.CD.h + CD.t/CD.kwall + 1/C.CD.h)^-1;
+CD.U = (1/CD.H.h + CD.t/CD.kwall + 1/CD.C.h)^-1;
 CD.A = UA/CD.U;
 
 %% Validate calculations
@@ -215,13 +217,13 @@ fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',CD.U)
 fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',CD.A)
 fprintf('Total length:\tL = %0.2f\t\t[m]\n',CD.L)
 fprintf('Total width:\tW = %0.2f\t\t[m]\n',CD.W)
-fprintf('Total height:\tH = %0.2f\t\t[m]\n',CD.H)
-fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', H.CD.dp, C.CD.dp)
-fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', H.CD.h, C.CD.h)
-fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', H.CD.Nu, C.CD.Nu)
-fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', H.CD.Aht, C.CD.Aht)
-fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n', H.CD.v, C.CD.v)
-fprintf('Reynolds:\t\tRe = %0.3e\tRe = %0.3e\t[-]\n\n', H.CD.Re, C.CD.Re)
+fprintf('Total height:\tH = %0.2f\t\t[m]\n',CD.Height)
+fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', CD.H.dp, CD.C.dp)
+fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', CD.H.h, CD.C.h)
+fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', CD.H.Nu, CD.C.Nu)
+fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', CD.H.Aht, CD.C.Aht)
+fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n', CD.H.v, CD.C.v)
+fprintf('Reynolds:\t\tRe = %0.3e\tRe = %0.3e\t[-]\n\n', CD.H.Re, CD.C.Re)
 
 
 % figure(1)
