@@ -12,8 +12,8 @@ p = zeros(1,5); % [bar]
 T = zeros(1,5); % [C]
 h = zeros(1,5); % [kJ/kg]
 s = zeros(1,5); % [kJ/kg/K]
-q = zeros(1,5); % [kJ/kg]
-w = zeros(1,5); % [kJ/kg]
+q = zeros(1,5); % [J/kg]
+w = zeros(1,5); % [J/kg]
 rho = zeros(1,5);
 
 % Constants
@@ -153,14 +153,14 @@ Cond.R.V = nan;
 Cond.DH.V = Cond.DH.mdot/Cond.DH.rho;
 
 %HX
-Cond.R.L = 3.7;
+Cond.R.L = 10;
 Cond.DH.L = Cond.R.L;
 Cond.R.D = 20e-3;
 Cond.DH.D = Cond.R.D;
 
-Cond.R.Nplatey = 15;
+Cond.R.Nplatey = 12;
 Cond.DH.Nplatey = Cond.R.Nplatey;
-Cond.R.Nplatex = 15;
+Cond.R.Nplatex = 12;
 Cond.DH.Nplatex = Cond.R.Nplatex;
 
 Cond.Wi = Cond.R.Nplatex*Cond.R.D*2;
@@ -211,14 +211,14 @@ Evap.R.V = nan;
 Evap.W.V = Evap.W.mdot/Evap.W.rho;
 
 %HX
-Evap.R.L = 3.7;
+Evap.R.L = 4.2;
 Evap.W.L = Evap.R.L;
 Evap.R.D = 20e-3;
 Evap.W.D = Evap.R.D;
 
-Evap.R.Nplatey = 15;
+Evap.R.Nplatey = 20;
 Evap.W.Nplatey = Evap.R.Nplatey;
-Evap.R.Nplatex = 15;
+Evap.R.Nplatex = 20;
 Evap.W.Nplatex = Evap.R.Nplatex;
 
 Evap.Wi = Evap.R.Nplatex*Evap.R.D*2;
@@ -301,8 +301,8 @@ Econ.R.OD = Econ.R.ID + 2* 1e-3;
 Econ.R.pitch = 1.5*Econ.R.OD; % Distance between centers of two tubes 1.25 OD is conventional
 
 Econ.R.Ntube = 75;
-Econ.R.Npass = 4;
-Econ.R.L = 1.75;
+Econ.R.Npass = 6;
+Econ.R.L = 2;
 
 Econ.R.rough = 0.015e-3;
 Econ.W.rough = Econ.R.rough;
@@ -315,15 +315,16 @@ Econ.W.L = Econ.R.L;
 
 [Econ.R,Econ.W] = shellTube(Econ.R,Econ.W);
 
-% Correction factor Shell & Tube
-% ST.Z = (H.Tin-H.Tout)/(C.Tout-C.Tin);
-% ST.Y = (H.Tout-H.Tin)/(C.Tin-H.Tin);
-Econ.F = 0.93;
-
 Econ.kWall = 50; % Steel = 50 W/m/K
 Econ.U = (1/Econ.W.h + Econ.R.OD*log(Econ.R.OD/Econ.R.ID)/2/Econ.kWall + Econ.R.OD/Econ.R.ID/Econ.R.h)^-1;  % 4PC00 7.43
 Econ.A = Econ.UA/Econ.U;
-Econ.AF = Econ.A/Econ.F;
+
+%% Kostenplaatje
+costTurbCond = 1e6;
+% costCompress = 
+% cost = 
+
+
 
 %% Figure
 sat = getSatCurve();
