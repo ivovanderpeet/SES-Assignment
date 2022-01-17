@@ -89,14 +89,13 @@ Evap.R.mu = XSteam('my_pT', Evap.R.p/1e5, Evap.R.Tm*0.99999);
 Evap.R.k = XSteam('tc_pT', Evap.R.p/1e5, Evap.R.Tm*0.99999);
 
 % Well-side
-Evap.W.mdot = 300; % [kg/s] DEZE MAG JE KIEZEN
+Evap.W.mdot = 350; % [kg/s] DEZE MAG JE KIEZEN
 Evap.W.p = 50e5; % SCHATING MOET NOG VERANDERD WORDEN
 Evap.W.Qdot = -Evap.R.Qdot;
 Evap.W.Tin = 240;
 Evap.W = getToutCp(Evap.W);
 
 %% Properties of economizer
-
 % Temperatures 
 Econ.R.Tin = T(2);
 Econ.R.Tout = T(3);
@@ -269,45 +268,76 @@ Econ.W.Pr = Econ.W.Cp*Econ.W.mu/Econ.W.k;
 Econ.R.V = Econ.R.mdot/Econ.R.rho;
 Econ.W.V = Econ.W.mdot/Econ.W.rho;
 
-%HX
-Econ.R.L = 3.7;
-Econ.W.L = Econ.R.L;
-Econ.R.D = 20e-3;
-Econ.W.D = Econ.R.D;
+% Counterflow ducts HX
+% Econ.R.L = 3.7;
+% Econ.W.L = Econ.R.L;
+% Econ.R.D = 15e-3;
+% Econ.W.D = Econ.R.D;
+% 
+% Econ.R.Nplatey = 10;
+% Econ.W.Nplatey = Econ.R.Nplatey;
+% Econ.R.Nplatex = 10;
+% Econ.W.Nplatex = Econ.R.Nplatex;
+% 
+% Econ.Wi = Econ.R.Nplatex*Econ.R.D*2;
+% Econ.Hi = Econ.R.Nplatey*Econ.R.D*2;
+% Econ.L = Econ.R.L;
+% 
+% Econ.R.rough = 0.015e-3;
+% Econ.W.rough = Econ.R.rough;
+% 
+% [Econ.R] = counterDucts(Econ.R);
+% [Econ.W] = counterDucts(Econ.W);
 
-Econ.R.Nplatey = 15;
-Econ.W.Nplatey = Econ.R.Nplatey;
-Econ.R.Nplatex = 15;
-Econ.W.Nplatex = Econ.R.Nplatex;
+% Heat transfer coef.
+% Econ.t = 1e-3;
+% Econ.kwall = 50; % STEEL
+% Econ.U = (1/Econ.R.h + Econ.t/Econ.kwall + 1/Econ.W.h)^-1;
+% Econ.A = Econ.UA/Econ.U;
 
-Econ.Wi = Econ.R.Nplatex*Econ.R.D*2;
-Econ.Hi = Econ.R.Nplatey*Econ.R.D*2;
-Econ.L = Econ.R.L;
+% Shell & tube HX
+Econ.R.ID = 20e-3;
+Econ.R.OD = Econ.R.ID + 2* 1e-3;
+Econ.R.pitch = 1.5*Econ.R.OD; % Distance between centers of two tubes 1.25 OD is conventional
+
+Econ.R.Ntube = 75;
+Econ.R.Npass = 4;
+Econ.R.L = 1.75;
 
 Econ.R.rough = 0.015e-3;
 Econ.W.rough = Econ.R.rough;
 
-[Econ.R] = counterDucts(Econ.R);
-[Econ.W] = counterDucts(Econ.W);
+% https://www.engineeringtoolbox.com/smaller-circles-in-larger-circle-d_1849.html
+% http://hydra.nat.uni-magdeburg.de/packing/cci/
+load('circ.mat');
+Econ.W.ID = Econ.R.pitch*circ.ratio(Econ.R.Ntube*Econ.R.Npass);
+Econ.W.L = Econ.R.L;
 
-% Heat transfer coef.
-Econ.t = 1e-3;
-Econ.kwall = 50; % STEEL
-Econ.U = (1/Econ.R.h + Econ.t/Econ.kwall + 1/Econ.W.h)^-1;
+[Econ.R,Econ.W] = shellTube(Econ.R,Econ.W);
+
+% Correction factor Shell & Tube
+% ST.Z = (H.Tin-H.Tout)/(C.Tout-C.Tin);
+% ST.Y = (H.Tout-H.Tin)/(C.Tin-H.Tin);
+Econ.F = 0.93;
+
+Econ.kWall = 50; % Steel = 50 W/m/K
+Econ.U = (1/Econ.W.h + Econ.R.OD*log(Econ.R.OD/Econ.R.ID)/2/Econ.kWall + Econ.R.OD/Econ.R.ID/Econ.R.h)^-1;  % 4PC00 7.43
 Econ.A = Econ.UA/Econ.U;
+Econ.AF = Econ.A/Econ.F;
 
 %% Figure
 sat = getSatCurve();
+clc;
 
-figure(1)
-plot([s,s(1)],[T,T(1)]); hold on
-plot(sat.s,sat.T)
-title('T-s diagram')
-xlabel('Entropy s [kJ/kg/K]')
-ylabel('Temperature [C]')
-text(s,T,{'1','2','3','4','5'})
-grid on
-
+% figure(1)
+% plot([s,s(1)],[T,T(1)]); hold on
+% plot(sat.s,sat.T)
+% title('T-s diagram')
+% xlabel('Entropy s [kJ/kg/K]')
+% ylabel('Temperature [C]')
+% text(s,T,{'1','2','3','4','5'})
+% grid on
+% 
 figure(2)
 plot([h,h(1)],[T,T(1)]); hold on
 plot(sat.h,sat.T);
@@ -325,15 +355,15 @@ fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',Cond.A)
 fprintf('Total length:\tL = %0.2f\t\t[m]\n',Cond.L)
 fprintf('Total width:\tW = %0.2f\t\t[m]\n',Cond.Wi)
 fprintf('Total height:\tH = %0.2f\t\t[m]\n',Cond.Hi)
-fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', Cond.R.dp, Cond.DH.dp)
-fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', Cond.R.h, Cond.DH.h)
+fprintf('Pres. drop:\t\tdp = %0.2e\t\tdp = %0.2e\t[Pa]\n', Cond.R.dp, Cond.DH.dp)
+fprintf('Conv. coef.:\th = %0.2e\t\t\th = %0.2e\t[W/m2/K]\n', Cond.R.h, Cond.DH.h)
 fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Cond.R.Nu, Cond.DH.Nu)
 fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', Cond.R.Aht, Cond.DH.Aht)
-fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n', Cond.R.v, Cond.DH.v)
-fprintf('Reynolds:\t\tRe = %0.3e\tRe = %0.3e\t[-]\n\n', Cond.R.Re, Cond.DH.Re)
+fprintf('Velocity:\t\tv = %0.2f\t\t\tv = %0.2f\t\t[m/s]\n', Cond.R.v, Cond.DH.v)
+fprintf('Reynolds:\t\tRe = %0.3e\t\tRe = %0.3e\t[-]\n\n', Cond.R.Re, Cond.DH.Re)
 
 fprintf('EVAPORATOR HEAT EXCHANGER PROPERTIES\n')
-fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',Evap.U)
+fprintf('Heat-trns coef:\tU = %0.2f\t[W/m2/K]\n',Evap.U)
 fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',Evap.A)
 fprintf('Total length:\tL = %0.2f\t\t[m]\n',Evap.L)
 fprintf('Total width:\tW = %0.2f\t\t[m]\n',Evap.Wi)
@@ -348,9 +378,12 @@ fprintf('Reynolds:\t\tRe = %0.3e\tRe = %0.3e\t[-]\n\n', Evap.W.Re, Evap.R.Re)
 fprintf('ECONOMIZER HEAT EXCHANGER PROPERTIES\n')
 fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',Econ.U)
 fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',Econ.A)
-fprintf('Total length:\tL = %0.2f\t\t[m]\n',Econ.L)
-fprintf('Total width:\tW = %0.2f\t\t[m]\n',Econ.Wi)
-fprintf('Total height:\tH = %0.2f\t\t[m]\n',Econ.Hi)
+fprintf('Total length:\tL = %0.2f\t\t[m]\n',Econ.R.L)
+fprintf('Shell diameter:\tD = %0.2f\t\t[m]\n',Econ.W.ID)
+fprintf('Tube diameter:\tID = %0.4f\t\t[m]\n',Econ.R.ID)
+fprintf('Tube diameter:\tOD = %0.4f\t\t[m]\n',Econ.R.OD)
+fprintf('Num. of tubes:\tN = %0.2f\t\t[-]\n',Econ.R.Ntube)
+fprintf('Num. of passes:\tN = %0.2f\t\t[-]\n',Econ.R.Npass)
 fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', Econ.W.dp, Econ.R.dp)
 fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', Econ.W.h, Econ.R.h)
 fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Econ.W.Nu, Econ.R.Nu)
