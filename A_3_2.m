@@ -2,7 +2,7 @@ clear all; close all; clc
 addpath('C:\Users\ivova\OneDrive - TU Eindhoven\03 Education\Masters Courses\4EM70 Sustainable Energy Sources\SES-Assignment\functions')
 
 % Constants
-Cond.DH.Qdot = 50e6; % [W]
+Cond.DH.Qdot = 50e6; % [W] DH power
 Cond.R.Qdot = -Cond.DH.Qdot;
 
 % From well
