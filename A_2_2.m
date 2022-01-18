@@ -320,12 +320,66 @@ Econ.U = (1/Econ.W.h + Econ.R.OD*log(Econ.R.OD/Econ.R.ID)/2/Econ.kWall + Econ.R.
 Econ.A = Econ.UA/Econ.U;
 
 %% Kostenplaatje
-costTurbCond = 1e6;
-% costCompress = 
-% cost = 
 
+Pump.W = w(2)*Evap.R.mdot;
+Pump.Qdot = Evap.R.mdot/Econ.R.rho;
+Turbine.W = -w(5)*Evap.R.mdot;
+Econ.Q = q(3)*Evap.R.mdot;
+Evap.Q = q(4)*Evap.R.mdot;
+Cond.Q = q(1)*Evap.R.mdot;
 
+%Kut Amerikanen enzo
+hp = 0.00134102; %horsepower
+ft2 = 10.7639; %feet squared
+gm = 15850.3; %gallons per minute
 
+Pump.hp = Pump.W*hp;
+Pump.gm = Pump.Qdot*gm;
+Turbine.hp = Turbine.W*hp;
+Econ.Aft2 = Econ.A*ft2;
+Evap.Aft2 = Evap.A*ft2;
+Cond.Aft2 = Econ.A*ft2;
+
+%Interpolation of costs
+if Pump.gm > 400 && Pump.gm < 500 %Rotary pump (=goedkoopst)
+    Pump.costs = 17300 + (19200 - 17300)/(500 - 400)*(Pump.gm - 400);
+else
+    Pump.costs = nan;
+end
+
+if Econ.Aft2 > 400 && Econ.Aft2 < 500 %Shell and Tube Heat Exchangers
+    Econ.costs = 59100 + (68000 - 59100)/(500 - 400)*(Econ.Aft2 - 400); 
+elseif Econ.Aft2 > 600 && Econ.Aft2 < 700 %Shell and Tube Heat Exchangers
+    Econ.costs = 68400 + (70000 - 68400)/(700 - 600)*(Econ.Aft2 - 600);
+elseif Econ.Aft2 > 800 && Econ.Aft2 < 900 %Shell and Tube Heat Exchangers
+    Econ.costs = 70400 + (72600 - 70400)/(900 - 800)*(Econ.Aft2 - 800); 
+elseif Econ.Aft2 > 900 && Econ.Aft2 < 1000 %Shell and Tube Heat Exchangers
+    Econ.costs = 72600 + (73100 - 72600)/(1000 - 900)*(Econ.Aft2 - 900); 
+else
+    Econ.costs = nan;
+end
+
+if Evap.Aft2 > 1000 && Evap.Aft2 < 2000 %Evaporator (horizontal tube)
+    Evap.costs = 226300 + (317100 - 226300)/(2000 - 1000)*(Evap.Aft2 - 1000);
+elseif Evap.Aft2 > 2000 && Evap.Aft2 < 3000 %Evaporator (horizontal tube)
+    Evap.costs = 317100 + (386300 - 317100)/(3000 - 2000)*(Evap.Aft2 - 2000);
+elseif Evap.Aft2 > 3000 && Evap.Aft2 < 4000 %Evaporator (horizontal tube)
+    Evap.costs = 386300 + (444300 - 386300)/(4000 - 3000)*(Evap.Aft2 - 3000);
+elseif Evap.Aft2 > 4000 && Evap.Aft2 < 5000 %Evaporator (horizontal tube)
+    Evap.costs = 444300 + (496800 - 444300)/(5000 - 4000)*(Evap.Aft2 - 4000);
+else
+    Evap.costs = nan;
+end
+
+if Turbine.hp > 10000 && Turbine.hp < 15000 %Steam Turbine (includes condensor)
+    Turbine.costs = 1106600 + (1477100 - 1106600)/(15000 - 10000)*(Turbine.hp - 10000);
+else
+    Turbine.costs = nan;
+end
+
+tot_cost = Pump.costs + Turbine.costs + Econ.costs + Evap.costs;
+elec_revenue = (Turbine.W*10e-3-Pump.W*10e-3)*0.09;
+ROI = tot_cost/elec_revenue;
 %% Figure
 sat = getSatCurve();
 clc;
@@ -339,16 +393,16 @@ clc;
 % text(s,T,{'1','2','3','4','5'})
 % grid on
 % 
-figure(2)
-plot([h,h(1)],[T,T(1)]); hold on
-plot(sat.h,sat.T);
-plot([h(1),h(5)],[Cond.DH.Tin,Cond.DH.Tout]);
-plot([h(2),h(3),h(4)],[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
-title('Pinch diagram')
-xlabel('Enthalpy h [J/kg]')
-ylabel('Temperature [C]')
-text(h,T,{'1','2','3','4','5'})
-grid on
+% figure(2)
+% plot([h,h(1)],[T,T(1)]); hold on
+% plot(sat.h,sat.T);
+% plot([h(1),h(5)],[Cond.DH.Tin,Cond.DH.Tout]);
+% plot([h(2),h(3),h(4)],[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
+% title('Pinch diagram')
+% xlabel('Enthalpy h [J/kg]')
+% ylabel('Temperature [C]')
+% text(h,T,{'1','2','3','4','5'})
+% grid on
 
 fprintf('CONDENSOR HEAT EXCHANGER PROPERTIES\n')
 fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',Cond.U)
