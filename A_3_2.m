@@ -12,9 +12,8 @@ h(1) = XSteam('h_pT', p(1), T(1));
 s(1) = XSteam('s_pT', p(1), T(1));
 
 % After flash tank
-% p(2) = 18.1; % [bar] DEZE MAG JE KIEZEN MET STUDENTNUMMER
-p(2) = 12.1;
-% p(2) = 30.1;
+p(2) = 18.1; % [bar] DEZE MAG JE KIEZEN MET STUDENTNUMMER
+% p(2) = 9.1;
 h(2) = h(1);
 T(2) = XSteam('T_ph', p(2), h(2));
 s(2) = XSteam('s_ph', p(2), h(2));
@@ -29,8 +28,8 @@ h(3) = XSteam('hV_p', p(3));
 s(3) = XSteam('sV_p', p(3));
 
 % From turbine to condensor
-% p(4) = 1.9; % [Bar] DEZE MAG JE KIEZEN MET JE STUDENTNUMMER
-p(4) = 5.2;
+p(4) = 1.9; % [Bar] DEZE MAG JE KIEZEN MET JE STUDENTNUMMER
+% p(4) = 5.2;
 s(4) = s(3);
 h(4) = XSteam('h_ps',p(4),s(4));
 T(4) = XSteam('T_ps',p(4),s(4));
