@@ -179,6 +179,12 @@ Cond.kwall = 50; % STEEL
 Cond.U = (Cond.t/Cond.kwall + 1/Cond.DH.h)^-1;
 Cond.A = Cond.UA/Cond.U;
 
+Cond.Cmin = Cond.DH.mdot*Cond.DH.Cp;
+Cond.CR = 0;
+Cond.NTU = Cond.UA/Cond.Cmin;
+
+Cond.eps = (1-exp(-Cond.NTU.*(1-Cond.CR)))./(1-Cond.CR.*exp(-Cond.NTU.*(1-Cond.CR)));
+Cond.eps2 = (Cond.DH.Tout-Cond.DH.Tin)/(Cond.R.Tin-Cond.DH.Tin);
 %% Evaporator heat exchanger
 % Determine dTlm and UA
 Evap.dT1 = Evap.R.Tout - Evap.W.Tin;
@@ -237,6 +243,12 @@ Evap.kwall = 50; % STEEL
 Evap.U = (Evap.t/Evap.kwall + 1/Evap.W.h)^-1;
 Evap.A = Evap.UA/Evap.U;
 
+Evap.Cmin = Evap.W.mdot*Evap.W.Cp;
+Evap.CR = 0;
+Evap.NTU = Evap.UA/Evap.Cmin;
+
+Evap.eps = (1-exp(-Evap.NTU.*(1-Evap.CR)))./(1-Evap.CR.*exp(-Evap.NTU.*(1-Evap.CR)));
+Evap.eps2 = (Evap.W.Tout-Evap.W.Tin)/(Evap.R.Tin-Evap.W.Tin);
 %% Economizer heat exchanger
 % Determine dTlm and UA
 Econ.dT1 = Econ.R.Tout - Econ.W.Tin;
@@ -268,33 +280,6 @@ Econ.W.Pr = Econ.W.Cp*Econ.W.mu/Econ.W.k;
 Econ.R.V = Econ.R.mdot/Econ.R.rho;
 Econ.W.V = Econ.W.mdot/Econ.W.rho;
 
-% Counterflow ducts HX
-% Econ.R.L = 3.7;
-% Econ.W.L = Econ.R.L;
-% Econ.R.D = 15e-3;
-% Econ.W.D = Econ.R.D;
-% 
-% Econ.R.Nplatey = 10;
-% Econ.W.Nplatey = Econ.R.Nplatey;
-% Econ.R.Nplatex = 10;
-% Econ.W.Nplatex = Econ.R.Nplatex;
-% 
-% Econ.Wi = Econ.R.Nplatex*Econ.R.D*2;
-% Econ.Hi = Econ.R.Nplatey*Econ.R.D*2;
-% Econ.L = Econ.R.L;
-% 
-% Econ.R.rough = 0.015e-3;
-% Econ.W.rough = Econ.R.rough;
-% 
-% [Econ.R] = counterDucts(Econ.R);
-% [Econ.W] = counterDucts(Econ.W);
-
-% Heat transfer coef.
-% Econ.t = 1e-3;
-% Econ.kwall = 50; % STEEL
-% Econ.U = (1/Econ.R.h + Econ.t/Econ.kwall + 1/Econ.W.h)^-1;
-% Econ.A = Econ.UA/Econ.U;
-
 % Shell & tube HX
 Econ.R.ID = 20e-3;
 Econ.R.OD = Econ.R.ID + 2* 1e-3;
@@ -319,6 +304,13 @@ Econ.kWall = 50; % Steel = 50 W/m/K
 Econ.U = (1/Econ.W.h + Econ.R.OD*log(Econ.R.OD/Econ.R.ID)/2/Econ.kWall + Econ.R.OD/Econ.R.ID/Econ.R.h)^-1;  % 4PC00 7.43
 Econ.A = Econ.UA/Econ.U;
 
+Econ.Cmin = min(Econ.W.mdot*Econ.W.Cp, Econ.R.mdot*Econ.R.Cp);
+Econ.Cmax = max(Econ.W.mdot*Econ.W.Cp, Econ.R.mdot*Econ.R.Cp);
+Econ.CR = Econ.Cmin/Econ.Cmax;
+Econ.NTU = Econ.UA/Econ.Cmin;
+
+Econ.eps = (1-exp(-Econ.NTU.*(1-Econ.CR)))./(1-Econ.CR.*exp(-Econ.NTU.*(1-Econ.CR)));
+Econ.eps2 = (Econ.R.Tout-Econ.R.Tin)/(Econ.W.Tin-Econ.R.Tin);
 %% Kostenplaatje
 
 Pump.W = w(2)*Evap.R.mdot;
@@ -327,6 +319,8 @@ Turbine.W = -w(5)*Evap.R.mdot;
 Econ.Q = q(3)*Evap.R.mdot;
 Evap.Q = q(4)*Evap.R.mdot;
 Cond.Q = q(1)*Evap.R.mdot;
+
+eta = 1 - abs(Cond.Q)/(Econ.Q + Evap.Q);
 
 %Kut Amerikanen enzo
 hp = 0.00134102; %horsepower
@@ -410,6 +404,7 @@ fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',Cond.A)
 fprintf('Total length:\tL = %0.2f\t\t[m]\n',Cond.L)
 fprintf('Total width:\tW = %0.2f\t\t[m]\n',Cond.Wi)
 fprintf('Total height:\tH = %0.2f\t\t[m]\n',Cond.Hi)
+fprintf('NTU:\tNTU = %0.2f\t\t[-]\n',Cond.NTU)
 fprintf('Pres. drop:\t\tdp = %0.2e\t\tdp = %0.2e\t[Pa]\n', Cond.R.dp, Cond.DH.dp)
 fprintf('Conv. coef.:\th = %0.2e\t\t\th = %0.2e\t[W/m2/K]\n', Cond.R.h, Cond.DH.h)
 fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Cond.R.Nu, Cond.DH.Nu)
@@ -423,6 +418,7 @@ fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',Evap.A)
 fprintf('Total length:\tL = %0.2f\t\t[m]\n',Evap.L)
 fprintf('Total width:\tW = %0.2f\t\t[m]\n',Evap.Wi)
 fprintf('Total height:\tH = %0.2f\t\t[m]\n',Evap.Hi)
+fprintf('NTU:\tNTU = %0.2f\t\t[-]\n',Evap.NTU)
 fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', Evap.W.dp, Evap.R.dp)
 fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', Evap.W.h, Evap.R.h)
 fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Evap.W.Nu, Evap.R.Nu)
@@ -439,6 +435,7 @@ fprintf('Tube diameter:\tID = %0.4f\t\t[m]\n',Econ.R.ID)
 fprintf('Tube diameter:\tOD = %0.4f\t\t[m]\n',Econ.R.OD)
 fprintf('Num. of tubes:\tN = %0.2f\t\t[-]\n',Econ.R.Ntube)
 fprintf('Num. of passes:\tN = %0.2f\t\t[-]\n',Econ.R.Npass)
+fprintf('NTU:\tNTU = %0.2f\t\t[-]\n',Econ.NTU)
 fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', Econ.W.dp, Econ.R.dp)
 fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', Econ.W.h, Econ.R.h)
 fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', Econ.W.Nu, Econ.R.Nu)
