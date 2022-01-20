@@ -378,25 +378,45 @@ ROI = tot_cost/elec_revenue;
 sat = getSatCurve();
 clc;
 
-% figure(1)
-% plot([s,s(1)],[T,T(1)]); hold on
-% plot(sat.s,sat.T)
-% title('T-s diagram')
-% xlabel('Entropy s [kJ/kg/K]')
-% ylabel('Temperature [C]')
-% text(s,T,{'1','2','3','4','5'})
-% grid on
-% 
-% figure(2)
-% plot([h,h(1)],[T,T(1)]); hold on
-% plot(sat.h,sat.T);
-% plot([h(1),h(5)],[Cond.DH.Tin,Cond.DH.Tout]);
-% plot([h(2),h(3),h(4)],[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
-% title('Pinch diagram')
-% xlabel('Enthalpy h [J/kg]')
-% ylabel('Temperature [C]')
-% text(h,T,{'1','2','3','4','5'})
-% grid on
+figure(1)
+plot([s,s(1)],[T,T(1)]); hold on
+plot(sat.s,sat.T)
+title('T-s diagram')
+xlabel('Entropy s [kJ/kg/K]')
+ylabel('Temperature [C]')
+text(s,T,{'1','2','3','4','5'})
+grid on
+
+figure(2)
+plot([h,h(1)],[T,T(1)]); hold on
+plot(sat.h,sat.T);
+plot([h(1),h(5)],[Cond.DH.Tin,Cond.DH.Tout]);
+plot([h(2),h(3),h(4)],[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
+title('Pinch diagram')
+xlabel('Enthalpy h [J/kg]')
+ylabel('Temperature [C]')
+text(h,T,{'1','2','3','4','5'})
+grid on
+
+figure(3)
+semilogx([1./rho, 1/rho(1)],[p,p(1)]/1e5); hold on
+semilogx(sat.v,sat.p/1e5); grid on
+xlabel('Specific volume')
+ylabel('Pressure [Bar]')
+title('P-v diagram')
+text(1./rho,p/1e5,{'1','2','3','4','5'})
+
+figure(4)
+semilogy([h,h(1)]/1e3,[p,p(1)]/1e5); hold on
+semilogy(sat.h/1e3,sat.p/1e5);
+% plot([h(1),h(5)]/1e3,[Cond.DH.Tin,Cond.DH.Tout]);
+% plot([h(2),h(3),h(4)]/1e3,[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
+title('Pinch pressure diagram')
+xlabel('Enthalpy h [kJ/kg]')
+ylabel('Pressure [Bar]')
+text(h/1e3,p/1e5,{'1','2','3','4','5'})
+ylim([.1,1e3])
+grid on
 
 fprintf('CONDENSOR HEAT EXCHANGER PROPERTIES\n')
 fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',Cond.U)
