@@ -378,45 +378,48 @@ ROI = tot_cost/elec_revenue;
 sat = getSatCurve();
 clc;
 
-figure(1)
-plot([s,s(1)],[T,T(1)]); hold on
-plot(sat.s,sat.T)
-title('T-s diagram')
-xlabel('Entropy s [kJ/kg/K]')
-ylabel('Temperature [C]')
-text(s,T,{'1','2','3','4','5'})
-grid on
+% figure(1)
+% plot([s,s(1)],[T,T(1)]); hold on
+% plot(sat.s,sat.T)
+% title('T-s diagram')
+% xlabel('Entropy s [kJ/kg/K]')
+% ylabel('Temperature [C]')
+% text(s,T,{'1','2','3','4','5'})
+% grid on
+
+lb = [0 0.8 1];
 
 figure(2)
-plot([h,h(1)],[T,T(1)]); hold on
-plot(sat.h,sat.T);
-plot([h(1),h(5)],[Cond.DH.Tin,Cond.DH.Tout]);
-plot([h(2),h(3),h(4)],[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
+plot(sat.h,sat.T, 'k', 'LineWidth',2); hold on
+plot([h(1),h(5)],[Cond.DH.Tin,Cond.DH.Tout], 'b-o','linewidth', 3, 'MarkerSize',5, 'MarkerEdgeColor','b', 'MarkerFaceColor','b');
+plot([h(2),h(3),h(4)],[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin], 'r-o','linewidth', 3, 'MarkerSize',5, 'MarkerEdgeColor','r', 'MarkerFaceColor','r');
+plot([h,h(1)],[T,T(1)], '-o','color',lb,'linewidth', 3, 'MarkerSize',5, 'MarkerEdgeColor',lb, 'MarkerFaceColor',lb); 
 title('Pinch diagram')
 xlabel('Enthalpy h [J/kg]')
 ylabel('Temperature [C]')
-text(h,T,{'1','2','3','4','5'})
+text([h(1)-1.5e5, h(2)-3e4, h(3)+1e4, h(4)-2e5, h(5)-6e4],[T(1), T(2)+20, T(3)-15, T(4)-15, T(5)+15],{'1','2','3','4','5'},'color', lb, 'FontSize',12)
+legend('Saturation curve','District heating','Well','Rankine Cycle','Location','Northwest')
 grid on
 
-figure(3)
-semilogx([1./rho, 1/rho(1)],[p,p(1)]/1e5); hold on
-semilogx(sat.v,sat.p/1e5); grid on
-xlabel('Specific volume')
-ylabel('Pressure [Bar]')
-title('P-v diagram')
-text(1./rho,p/1e5,{'1','2','3','4','5'})
+% figure(3)
+% semilogx([1./rho, 1/rho(1)],[p,p(1)]/1e5); hold on
+% semilogx(sat.v,sat.p/1e5); grid on
+% xlabel('Specific volume')
+% ylabel('Pressure [Bar]')
+% title('P-v diagram')
+% text(1./rho,p/1e5,{'1','2','3','4','5'})
 
-figure(4)
-semilogy([h,h(1)]/1e3,[p,p(1)]/1e5); hold on
-semilogy(sat.h/1e3,sat.p/1e5);
-% plot([h(1),h(5)]/1e3,[Cond.DH.Tin,Cond.DH.Tout]);
-% plot([h(2),h(3),h(4)]/1e3,[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
-title('Pinch pressure diagram')
-xlabel('Enthalpy h [kJ/kg]')
-ylabel('Pressure [Bar]')
-text(h/1e3,p/1e5,{'1','2','3','4','5'})
-ylim([.1,1e3])
-grid on
+% figure(4)
+% semilogy([h,h(1)]/1e3,[p,p(1)]/1e5); hold on
+% semilogy(sat.h/1e3,sat.p/1e5);
+% % plot([h(1),h(5)]/1e3,[Cond.DH.Tin,Cond.DH.Tout]);
+% % plot([h(2),h(3),h(4)]/1e3,[Econ.W.Tout,Econ.W.Tin,Evap.W.Tin]);
+% title('Pinch pressure diagram')
+% xlabel('Enthalpy h [kJ/kg]')
+% ylabel('Pressure [Bar]')
+% text(h/1e3,p/1e5,{'1','2','3','4','5'})
+% ylim([.1,1e3])
+% grid on
 
 fprintf('CONDENSOR HEAT EXCHANGER PROPERTIES\n')
 fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',Cond.U)

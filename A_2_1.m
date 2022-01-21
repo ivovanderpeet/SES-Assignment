@@ -98,17 +98,17 @@ C.ST.ID = H.ST.pitch*circ.ratio(H.ST.Ntube*H.ST.Npass);
 C.ST.L = H.ST.L;
 
 % Unsure about C.h (effective diameter)
-[H,C] = shellTube(H,C);
+% [H,C] = shellTube(H,C);
 
 % Correction factor Shell & Tube
-ST.Z = (H.Tin-H.Tout)/(C.Tout-C.Tin);
-ST.Y = (H.Tout-H.Tin)/(C.Tin-H.Tin);
-ST.F = 0.93;
-
-ST.kWall = 50; % Steel = 50 W/m/K
-ST.U = (1/C.ST.h + H.ST.OD*log(H.ST.OD/H.ST.ID)/2/ST.kWall + H.ST.OD/H.ST.ID/H.ST.h)^-1;  % 4PC00 7.43
-ST.A = UA/ST.U;
-ST.AF = ST.A/ST.F;
+% ST.Z = (H.Tin-H.Tout)/(C.Tout-C.Tin);
+% ST.Y = (H.Tout-H.Tin)/(C.Tin-H.Tin);
+% ST.F = 0.93;
+% 
+% ST.kWall = 50; % Steel = 50 W/m/K
+% ST.U = (1/C.ST.h + H.ST.OD*log(H.ST.OD/H.ST.ID)/2/ST.kWall + H.ST.OD/H.ST.ID/H.ST.h)^-1;  % 4PC00 7.43
+% ST.A = UA/ST.U;
+% ST.AF = ST.A/ST.F;
 
 %% Counterflow plate heat exchanger
 H.CF.L = 3;
@@ -138,14 +138,14 @@ CF.A = UA/CF.U;
 %% Counterflow ducts heat exchanger
 CD.C = C;
 CD.H = H;
-CD.H.L = 3.7;
+CD.H.L = 4;
 CD.C.L = CD.H.L;
 CD.H.D = 20e-3;
 CD.C.D = CD.H.D;
 
-CD.H.Nplatey = 15;
+CD.H.Nplatey = 13;
 CD.C.Nplatey = CD.H.Nplatey;
-CD.H.Nplatex = 15;
+CD.H.Nplatex = 13;
 CD.C.Nplatex = CD.H.Nplatex;
 
 CD.W = CD.H.Nplatex*CD.H.D*2;
@@ -155,7 +155,8 @@ CD.L = CD.H.L;
 CD.H.rough = 0.015e-3;
 CD.C.rough = CD.H.rough;
 
-[CD.H,CD.C] = counterDucts(CD.H,CD.C);
+CD.H = counterDucts(CD.H);
+CD.C = counterDucts(CD.C);
 
 % Heat transfer coef.
 CD.t = 1e-3;
@@ -187,30 +188,30 @@ fprintf('Transfer units:\tNTU = %0.2f\t\t[-]\n',NTU)
 fprintf('Effectiveness:\teps = %0.4f\t[-]\n', eps)
 fprintf('Effectiveness2:\teps2 = %0.4f\t[-]\n\n', eps2)
 
-fprintf('SHELL & TUBE HEAT EXCHANGER PROPERTIES\n')
-fprintf('Corr. factor:\tZ = %0.3f\t\t[-]\n',ST.Z)
-fprintf('Corr. factor:\tY = %0.3f\t\t[-]\n',ST.Y)
-fprintf('Corr. factor:\tF = %0.3f\t\t[-]\n',ST.F)
-fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',ST.U)
-fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',ST.A)
-fprintf('Adjusted area:\tAF = %0.2f\t\t[m2]\n',ST.AF)
-fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', H.ST.dp, C.ST.dp)
-fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', H.ST.h, C.ST.h)
-fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', H.ST.Nu, C.ST.Nu)
-fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', H.ST.Aht, C.ST.Aht)
-fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n\n', H.ST.v, C.ST.v)
+% fprintf('SHELL & TUBE HEAT EXCHANGER PROPERTIES\n')
+% fprintf('Corr. factor:\tZ = %0.3f\t\t[-]\n',ST.Z)
+% fprintf('Corr. factor:\tY = %0.3f\t\t[-]\n',ST.Y)
+% fprintf('Corr. factor:\tF = %0.3f\t\t[-]\n',ST.F)
+% fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',ST.U)
+% fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',ST.A)
+% fprintf('Adjusted area:\tAF = %0.2f\t\t[m2]\n',ST.AF)
+% fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', H.ST.dp, C.ST.dp)
+% fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', H.ST.h, C.ST.h)
+% fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', H.ST.Nu, C.ST.Nu)
+% fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', H.ST.Aht, C.ST.Aht)
+% fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n\n', H.ST.v, C.ST.v)
 
-fprintf('COUNTERFLOW PLATE HEAT EXCHANGER PROPERTIES\n')
-fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',CF.U)
-fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',CF.A)
-fprintf('Total length:\tL = %0.2f\t\t[m]\n',CF.L)
-fprintf('Total width:\tW = %0.2f\t\t[m]\n',CF.W)
-fprintf('Total height:\tH = %0.2f\t\t[m]\n',CF.H)
-fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', H.CF.dp, C.CF.dp)
-fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', H.CF.h, C.CF.h)
-fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', H.CF.Nu, C.CF.Nu)
-fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', H.CF.Aht, C.CF.Aht)
-fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n\n', H.CF.v, C.CF.v)
+% fprintf('COUNTERFLOW PLATE HEAT EXCHANGER PROPERTIES\n')
+% fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',CF.U)
+% fprintf('Reqired area:\tA = %0.2f\t\t[m2]\n',CF.A)
+% fprintf('Total length:\tL = %0.2f\t\t[m]\n',CF.L)
+% fprintf('Total width:\tW = %0.2f\t\t[m]\n',CF.W)
+% fprintf('Total height:\tH = %0.2f\t\t[m]\n',CF.H)
+% fprintf('Pres. drop:\t\tdp = %0.2e\tdp = %0.2e\t[Pa]\n', H.CF.dp, C.CF.dp)
+% fprintf('Conv. coef.:\th = %0.2e\th = %0.2e\t[W/m2/K]\n', H.CF.h, C.CF.h)
+% fprintf('Nusselt number:\tNu = %0.1f\t\tNu = %0.1f\t\t[-]\n', H.CF.Nu, C.CF.Nu)
+% fprintf('HX Area:\t\tA = %0.2f\t\tA = %0.2f\t\t[m2]\n', H.CF.Aht, C.CF.Aht)
+% fprintf('Velocity:\t\tv = %0.2f\t\tv = %0.2f\t\t[m/s]\n\n', H.CF.v, C.CF.v)
 
 fprintf('COUNTERFLOW DUCTS HEAT EXCHANGER PROPERTIES\n')
 fprintf('Heat-trns coef:\tU = %0.2f\t\t[W/m2/K]\n',CD.U)
